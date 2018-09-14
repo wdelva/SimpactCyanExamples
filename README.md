@@ -3,14 +3,14 @@
 <!-- Created by Wim Delva and David Niyukuri, 14 September 2018 -->
 
 
-This file accompanies the article “SimpactCyan: An Open-source Simulator for Individual-Based Models in HIV Epidemiology with R and Python Interfaces”, available at: <https://www.biorxiv.org/content/early/2018/09/12/411512>
+This repository accompanies the article “SimpactCyan: An Open-source Simulator for Individual-Based Models in HIV Epidemiology with R and Python Interfaces”, available at: <https://www.biorxiv.org/content/early/2018/09/12/411512>
 <!-- This URL is a placeholder and must be replaced by the actual URL, once the paper has been uploaded. 
 The original paper is available at: <http://www.journals.uchicago.edu/doi/full/10.1086/596510>
 -->
 
 ## CONTENTS
 
-This file contains the following information:
+This repo contains the information necessary to reproduce the examples in the paper:
 
 * [Code and data files](#code-and-data-files)
    * Code file
