@@ -12,12 +12,12 @@ The original paper is available at: <http://www.journals.uchicago.edu/doi/full/1
 
 This file contains the following information:
 
-    * Code and data files
-        - Code file
-        - Data files
-    * System and software requirements
-    * Copyright and licensing information
-    * Contact information
+* [Code and data files](##code-and-data-files)
+   * Code file
+   * Data files
+* [System and software requirements](##system-and-software-requirements)
+* [Copyright and licensing information](##copyright-and-licensing-information)
+* [Contact information](##comtact-information)
 
 ## CODE AND DATA FILES 
 
