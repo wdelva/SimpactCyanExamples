@@ -17,7 +17,7 @@ This file contains the following information:
    * Data files
 * [System and software requirements](#system-and-software-requirements)
 * [Copyright and licensing information](#copyright-and-licensing-information)
-* [Contact information](#comtact-information)
+* [Contact information](#contact-information)
 
 ## CODE AND DATA FILES 
 
