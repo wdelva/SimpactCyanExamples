@@ -28,24 +28,34 @@ Three types of files (not including this readme file) are stored on this reposit
 
 All code is written in R. R is a statistical programming language and software package that is distributed under a GNU General Public License. R documentation and software is available for free download through the R Project for Statistical Computing website at http://www.r-project.org. The software is available as an executable file for a wide variety of operating systems and computer architectures, and a compilable binary is also available should you need it.
 
-  SimpactPaperPhyloExample.R -- This file contains the script to generate the data, run the phylogenetic analysis and produce the figures for the HIV transmission network, time-resolved phylogenetic tree, and the distribution of internal nodes in the reconstructed phylogenetic tree and simulated HIV transmission events.
+  SimpactPaperEAAAExample.R -- This file contains the script to generate the data, run the analysis and produce the figures for the ART coverage, HIV incidence and HIV prevalence over time. The analysis compares the ART coverage, HIV incidence and HIV prevalence over time.
+  
+  SimpactPaperPhyloExample.R -- This file contains the script to generate the data, run the analysis and produce the figures for the HIV transmission network, time-resolved phylogenetic tree, and the distribution of internal nodes in the reconstructed phylogenetic tree and simulated HIV transmission events.
+
 
 ### Data files
-
-  his.seq.B.pol.j.fasta -- This file is a fasta file of the HIV subtype B pol gene sequence of the seed infection (root of the phylogenetic tree).
+  
+  SimpactPaperEAAAExample.RData -- This file is an RData object, containing the data needed for the reproduction of the figures in the "Early Access to ART for All" (EAAA) example. These are the model input parameter values and the model output statistics for 20 simulations under an EAAA scenario (a policy of immediate access to ART for all people infected with HIV from October 2016), and an alternative scenario (CD4 cell count threshold for ART eligibility stays at 500 cells/microliter from mid 2013 onwards). 
 
   SimpactPaperPhyloExample.RData -- This file is an RData object, containing the data needed for the reproduction of the figures in the phylo example. These data are: transNet.yrs.Old (HIV transmission network object), dater.tree (time-stamped phylogenetic tree), i.vec (vector of calendar years), int.node.vec (vector of the number of internal nodes in one-year calendar time intervals), and numb.tra (vector of the number of transmission events in one-year calendar time intervals).
 
-
+  hiv.seq.B.pol.j.fasta -- This file is a fasta file of the HIV subtype B pol gene sequence of the seed infection (root of the phylogenetic tree).
+  
+  
 ### Figure files
 
+  cov.FaFc.plot.pdf -- Panel A of the figure shown in the EAAA example.
+  
+  inc.FaFc.plot.pdf -- Panel B of the figure shown in the EAAA example.
+  
+  prev.FaFc.plot.pdf -- Panel C of the figure shown in the EAAA example.
+  
   network_vsc.pdf -- Panel A of the figure shown in the phylo example.
   
   tree_vsc.pdf -- Panel B of the figure shown in the phylo example.
   
   events_vsc.pdf -- Panel C of the figure shown in the phylo example.  
-
- 
+  
 
 ## SYSTEM AND SOFTWARE REQUIREMENTS
 
