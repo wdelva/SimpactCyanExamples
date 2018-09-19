@@ -3,7 +3,7 @@
 <!-- Created by Wim Delva and David Niyukuri, 14 September 2018 -->
 
 
-This repository accompanies the article “SimpactCyan: An Open-source Simulator for Individual-Based Models in HIV Epidemiology with R and Python Interfaces”, available at: <https://www.biorxiv.org/content/early/2018/09/12/411512>
+This repository accompanies the article “SimpactCyan: An Open-source Simulator for Individual-Based Models in HIV Epidemiology with R and Python Interfaces”, available at: <https://www.biorxiv.org/content/early/2018/XX/XX/XXXXXX>
 <!-- This URL is a placeholder and must be replaced by the actual URL, once the paper has been uploaded. 
 The original paper is available at: <http://www.journals.uchicago.edu/doi/full/10.1086/596510>
 -->
@@ -61,7 +61,7 @@ All code is written in R. R is a statistical programming language and software p
 
 ### Operating system
 
-  We have only tested this code on personal computers (OS X Version 10.11.6 and Linux Ubuntu Version 16.04), and on the XXXXXX cluster at the Cape Town Centre for High Performance Computing (CHPC) and the golett cluster of the Flemish Supercomputer Centre (VSC).
+  We have only tested this code on personal computers (OS X Version 10.11.6 and Linux Ubuntu Version 16.04), and on the lengau cluster at the Cape Town Centre for High Performance Computing (CHPC) and the golett cluster of the Flemish Supercomputer Centre (VSC).
 
 ### Required software
 
@@ -81,7 +81,7 @@ library(devtools)
 install_github("j0r1/readcsvcolumns/pkg")
 install_github("wdelva/RSimpactHelp”, dependencies = TRUE)
 
-p_load(Rcpp, ape, expoTree, data.table, readr, phangorn, dplyr, adephylo, treedater, geiger, picante, igraph, network, intergraph, ggtree, lubridate, ggplot2, ggnetwork, geomnet, RSimpactCyan, RSimpactHelper)
+p_load(Rcpp, ape, expoTree, data.table, readr, phangorn, dplyr, adephylo, treedater, geiger, picante, igraph, network, intergraph, ggtree, lubridate, ggplot2, ggnetwork, metafolio, magrittr, dplyr, tidyr, geomnet, RSimpactCyan, RSimpactHelper)
  
 
 ## COPYRIGHT AND LICENSING INFORMATION
