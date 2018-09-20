@@ -73,15 +73,19 @@ All code is written in R. R is a statistical programming language and software p
 
   SimpactCyan version 0.21 and RSimpactCyan. SimpactCyan is the core program that allows fast simulation of HIV transmission across a sexual network. RSimpactCyan is the R package that enables initiation and running of models built by SimpactCyan. Installation instructions for both are at: <https://github.com/j0r1/RSimpactCyan/blob/master/INSTALLATION.md>
 
-  A long list of auxiliary R packages is required to run the post-simulation analysis for the MaxART and phylo examples in the paper”
+  A long list of auxiliary R packages is required to run the post-simulation analysis for the MaxART and phylo examples in the paper.
 
-install.packages("devtools")
-install.packages("pacman")
-library(devtools)
-install_github("j0r1/readcsvcolumns/pkg")
-install_github("wdelva/RSimpactHelp”, dependencies = TRUE)
+  install.packages("devtools")
+  
+  install.packages("pacman")
+  
+  library(devtools)
 
-p_load(Rcpp, ape, expoTree, data.table, readr, phangorn, dplyr, adephylo, treedater, geiger, picante, igraph, network, intergraph, ggtree, lubridate, ggplot2, ggnetwork, metafolio, magrittr, dplyr, tidyr, geomnet, RSimpactCyan, RSimpactHelper)
+  install_github("j0r1/readcsvcolumns/pkg")
+
+  install_github("wdelva/RSimpactHelp”, dependencies = TRUE)
+
+  p_load(Rcpp, ape, expoTree, data.table, readr, phangorn, dplyr, adephylo, treedater, geiger, picante, igraph, network, intergraph, ggtree, lubridate, ggplot2, ggnetwork, metafolio, magrittr, dplyr, tidyr, geomnet, RSimpactCyan, RSimpactHelper)
  
 
 ## COPYRIGHT AND LICENSING INFORMATION
