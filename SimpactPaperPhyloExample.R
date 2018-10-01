@@ -38,31 +38,30 @@ library(tidyr)
 age.distr <- agedistr.creator(shape = 5, scale = 65)
 cfg.list <- input.params.creator(population.eyecap.fraction = 0.2, #0.21,#1,
                                  population.msm = "no",
-                                 population.simtime = 40, #20, #40,  #25 for validation. 20 for calibration
-                                 population.nummen = 1500, # 3800, #2500,
-                                 population.numwomen = 2000, #4200, #2500,
-                                 hivseed.time = 10, # 10,
+                                 population.simtime = 40,
+                                 population.nummen = 1500,
+                                 population.numwomen = 2000,
+                                 hivseed.time = 10,
                                  hivseed.type = "amount",
-                                 hivseed.amount = 20, #30,
+                                 hivseed.amount = 20,
                                  hivseed.age.min = 20,
                                  hivseed.age.max = 50,
                                  hivtransmission.param.a = -1, # -1,
                                  hivtransmission.param.b = -90,
                                  hivtransmission.param.c = 0.5,
-                                 hivtransmission.param.f1 = log(2), #log(inputvector[2]) , #log(2),
-                                 hivtransmission.param.f2 = log(log(1.4) / log(2)) / 5, #log(log(sqrt(inputvector[2])) / log(inputvector[2])) / 5, #log(log(1.4) / log(2)) / 5,
-                                 formation.hazard.agegapry.gap_factor_man_age = -0.01, #-0.01472653928518528523251061,
-                                 formation.hazard.agegapry.gap_factor_woman_age = -0.01, #-0.0726539285185285232510561,
+                                 hivtransmission.param.f1 = log(2),
+                                 hivtransmission.param.f2 = log(log(1.4) / log(2)) / 5,
+                                 formation.hazard.agegapry.gap_factor_man_age = -0.01,
+                                 formation.hazard.agegapry.gap_factor_woman_age = -0.01,
                                  formation.hazard.agegapry.meanage = -0.025,
                                  formation.hazard.agegapry.gap_factor_man_const = 0,
                                  formation.hazard.agegapry.gap_factor_woman_const = 0,
-                                 formation.hazard.agegapry.gap_factor_man_exp = -1, #-6,#-1.5,
-                                 formation.hazard.agegapry.gap_factor_woman_exp = -1, #-6,#-1.5,
-                                 formation.hazard.agegapry.gap_agescale_man = 0.25, #inputvector[3], # 0.25,
-                                 formation.hazard.agegapry.gap_agescale_woman = 0.25, #inputvector[3], # 0.25,#-0.30000007,#-0.03,
+                                 formation.hazard.agegapry.gap_factor_man_exp = -1,
+                                 formation.hazard.agegapry.gap_factor_woman_exp = -1,
+                                 formation.hazard.agegapry.gap_agescale_man = 0.25,
+                                 formation.hazard.agegapry.gap_agescale_woman = 0.25,
                                  debut.debutage = 15,
-                                 conception.alpha_base = -2.5#inputvector[14]#-2.5#,
-                                 #person.art.accept.threshold.dist.fixed.value = 0
+                                 conception.alpha_base = -2.5
 )
 
 
@@ -70,6 +69,7 @@ cfg.list["formation.hazard.agegapry.baseline"] <- 2
 cfg.list["mortality.aids.survtime.C"] <- 65
 cfg.list["mortality.aids.survtime.k"] <- -0.2
 cfg.list["monitoring.fraction.log_viralload"] <- 0 # 0.3
+cfg.list["dropout.interval.dist.type"] <- "uniform"
 cfg.list["dropout.interval.dist.uniform.min"] <- 1000
 cfg.list["dropout.interval.dist.uniform.max"] <- 2000
 
@@ -93,12 +93,11 @@ cfg.list["diagnosis.baseline"] <- -2
 
 
 
-# Let's introduce ART, and evaluate whether the HIV prevalence drops less rapidly
 art.intro <- list()
-art.intro["time"] <- 0.0001 # 25
-art.intro["person.art.accept.threshold.dist.fixed.value"] <- 1 # 0.5 # inputvector[4] ######### 0.5
-art.intro["diagnosis.baseline"] <- -2 # 0#100
-art.intro["monitoring.cd4.threshold"] <- 10000 # 1200
+art.intro["time"] <- 0.0001
+art.intro["person.art.accept.threshold.dist.fixed.value"] <- 1
+art.intro["diagnosis.baseline"] <- -2
+art.intro["monitoring.cd4.threshold"] <- 10000
 
 ### add something about diagnosis
 art.intro["diagnosis.agefactor"] <- 0
@@ -140,13 +139,13 @@ cfg["person.vsp.toacute.x"] <- 5 # See Bellan PLoS Medicine
 seedid <- inputvector[1]
 #cfg["person.agegap.man.dist.fixed.value"] <- -2 # inputvector[2]
 #cfg["person.agegap.woman.dist.fixed.value"] <- -2 # inputvector[2]
-cfg["formation.hazard.agegapry.gap_factor_man_exp"] <- inputvector[10] ######### -0.5
-cfg["formation.hazard.agegapry.gap_factor_woman_exp"] <- inputvector[10] ######### -0.5
+cfg["formation.hazard.agegapry.gap_factor_man_exp"] <- inputvector[10]
+cfg["formation.hazard.agegapry.gap_factor_woman_exp"] <- inputvector[10]
 cfg["formation.hazard.agegapry.baseline"] <- inputvector[11]
 
 cfg["formation.hazard.agegapry.numrel_man"] <- inputvector[12]
 cfg["formation.hazard.agegapry.numrel_woman"] <- inputvector[13]
-cfg["conception.alpha_base"] <- inputvector[14] #is conception.alpha.base (higher up)
+cfg["conception.alpha_base"] <- inputvector[14]
 cfg["dissolution.alpha_0"] <- inputvector[15]
 cfg["dissolution.alpha_4"] <- inputvector[16]
 
