@@ -567,6 +567,7 @@ ggsave(filename = "network_vsc.pdf",
 # B. Phylogenetic tree
 
 tree <- SimpactPaperPhyloExample$dater.tree
+class(tree) <- "phylo" # Removing "treedater" as one of the classes that this object belongs to.
 sim.start.year <- 1987
 first.transmission <- min(SimpactPaperPhyloExample$dater.tree$sts)
 mrsd <- max(SimpactPaperPhyloExample$dater.tree$sts)
