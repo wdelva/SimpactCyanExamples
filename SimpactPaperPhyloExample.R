@@ -1,3 +1,7 @@
+# Before running the code below, make sure you have followed the instructions for installing all the required software,
+# as explained in the README file.
+
+
 setwd("/path/to/your/working_directory/") # Change this to your own working directory
 
 # Make sure compiled tools (Seq-Gen and FastTree) are in same working directory
