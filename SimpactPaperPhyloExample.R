@@ -93,7 +93,7 @@ cfg.list["person.vsp.tofinalaids.x"] <- inputvector[17] # [17] # 12 c("unif", 10
 # ##############
 #
 
-cfg.list["conception.alpha_base"] <- inputvector[18] # [18] # -2.7 c("unif", -3.5, -1.7)
+cfg.list["conception.alpha_base"] <- inputvector[18]
 
 
 # # Assumptions to avoid negative branch lengths
@@ -131,10 +131,10 @@ cfg.list["monitoring.cd4.threshold"] <- 0 # 0 means nobody qualifies for ART
 cfg.list["diagnosis.baseline"] <- -2
 
 
-cfg.list["person.eagerness.man.dist.gamma.a"] <- 0.23 # 0.23
-cfg.list["person.eagerness.woman.dist.gamma.a"] <- 0.23 # 0.23
-cfg.list["person.eagerness.man.dist.gamma.b"] <- 45 # 45
-cfg.list["person.eagerness.woman.dist.gamma.b"] <- 45 # 45
+cfg.list["person.eagerness.man.dist.gamma.a"] <- 0.23
+cfg.list["person.eagerness.woman.dist.gamma.a"] <- 0.23
+cfg.list["person.eagerness.man.dist.gamma.b"] <- 45
+cfg.list["person.eagerness.woman.dist.gamma.b"] <- 45
 
 #### END Add-ons
 
@@ -142,15 +142,15 @@ cfg.list["person.eagerness.woman.dist.gamma.b"] <- 45 # 45
 # # ART intervention
 # ###################
 #
-# # ART acceptability paramter and the ART  interventions
+# # ART acceptability parameter and the ART interventions
 
 cfg.list["person.art.accept.threshold.dist.fixed.value"] <- 0.6
 
-# Let's introduce ART, and evaluate whether the HIV prevalence drops less  rapidly
+# Let's introduce ART
 art.intro <- list()
 art.intro["time"] <- 20
-art.intro["diagnosis.baseline"] <- -2 # 0#100
-art.intro["monitoring.cd4.threshold"] <- 100 # 1200
+art.intro["diagnosis.baseline"] <- -2
+art.intro["monitoring.cd4.threshold"] <- 100
 
 ### add something about diagnosis
 art.intro["diagnosis.agefactor"] <- 0
@@ -158,33 +158,29 @@ art.intro["diagnosis.genderfactor"] <- 0
 art.intro["diagnosis.diagpartnersfactor"] <- 0
 art.intro["diagnosis.isdiagnosedfactor"] <- 0
 ### end of add-on about diagnosis
-#art.intro["monitoring.interval.piecewise.cd4s"] <- "0,1300"
-# Gradual increase in CD4 threshold. in 2007:200. in 2010:350. in 2013:500
+# Gradual increase in CD4 threshold. in 2005:200. in 2010:350. in 2013:500
 art.intro1 <- list()
 art.intro1["time"] <- 22
-art.intro1["diagnosis.baseline"] <- -2 # 0#100
-art.intro1["monitoring.cd4.threshold"] <- 150 # 1200
+art.intro1["diagnosis.baseline"] <- -2
+art.intro1["monitoring.cd4.threshold"] <- 150
 
 art.intro2 <- list()
-art.intro2["time"] <- 25 # inputvector[5] ######### 30
+art.intro2["time"] <- 25
 art.intro2["monitoring.cd4.threshold"] <- 200
 
 art.intro3 <- list()
-art.intro3["time"] <- 30 # inputvector[4] + inputvector[5] + inputvector[6] ########### 33
+art.intro3["time"] <- 30
 art.intro3["monitoring.cd4.threshold"] <- 350
 
 art.intro4 <- list()
-art.intro4["time"] <- 33 # inputvector[4] + inputvector[5] + inputvector[6] + inputvector[7] ########### 36
+art.intro4["time"] <- 33
 art.intro4["monitoring.cd4.threshold"] <- 500
 
 art.intro5 <- list()
 art.intro5["time"] <- 36
 art.intro5["monitoring.cd4.threshold"] <- 700 # This is equivalent to immediate access
 
-# tasp.indicator <- inputvector[9] # 1 if the scenario is TasP, 0 if the scenario is current status
-interventionlist <- list(art.intro, art.intro1, art.intro2, art.intro3, art.intro4, art.intro5)
-
-intervention <- interventionlist
+intervention <- list(art.intro, art.intro1, art.intro2, art.intro3, art.intro4, art.intro5)
 
 # Events
 cfg.list["population.maxevents"] <- as.numeric(cfg.list["population.simtime"][1]) * as.numeric(cfg.list["population.nummen"][1]) * 3
@@ -223,11 +219,7 @@ for (list.element in 1:length(simpact.trans.net)){
   }
 }
 
-# min(smallest.branches, na.rm = TRUE) #
 
-# which(smallest.branches!="NA")
-
-# [1]  1  5  9 10 12 13 17
 
 
 ###############################
@@ -539,7 +531,7 @@ SimpactPaperPhyloExample$int.node.vec <- int.node.vec
 SimpactPaperPhyloExample$numb.tra <- numb.tra
 save(SimpactPaperPhyloExample, file = "SimpactPaperPhyloExample.RData")
 
-load(file = "/Users/delvaw/Google Drive/SimpactCyanPaper/Epidemiology/Example2/SimpactPaperPhyloExample.RData")
+load(file = "/path/to/your/working_directory/SimpactPaperPhyloExample.RData")
 # A. Transmission network
 
 network <- SimpactPaperPhyloExample$transNet.yrs.Ord
@@ -549,12 +541,19 @@ vertices <- as.data.frame(vertex_attr(network))
 network.df <- fortify(as.edgedf(edges), vertices)
 
 transmissionnetwork.plot <- ggplot(data = network.df,
-                                   layout.alg = "fruchtermanreingold",
                                    aes(from_id = from_id,
                                        to_id = to_id)) +
   geom_net(directed = TRUE,
-           size = 2,
-           arrowsize = 0.5) +
+           size = 2.5,
+           layout.alg = "kamadakawai",
+           layout.par = list(niter = 2000,
+                             sigma = 200,
+                             kkconst = 10),
+           alpha = 1,
+           arrowsize = 0.7,
+           arrowgap = 0.005,
+           ecolour = "darkgrey",
+           colour = "black") +
   theme(axis.ticks=element_blank(),
         axis.title=element_blank(),
         axis.text=element_blank()) +
@@ -564,7 +563,7 @@ print(transmissionnetwork.plot)
 ggsave(filename = "network_vsc.pdf",
        plot = transmissionnetwork.plot,
        path = "/path/to/your/working_directory/plots",
-       width = 10, height = 8, units = "cm")
+       width = 20, height = 30, units = "cm")
 
 
 
@@ -578,7 +577,9 @@ mrsd <- max(SimpactPaperPhyloExample$dater.tree$sts)
 
 dates <- format(date_decimal(c(mrsd, first.transmission)), "%Y-%m-%d")
 tree$root.edge <-  - sim.start.year
-phylotree.plot <- ggtree(print.default(tree), mrsd = dates[1]) + 
+phylotree.plot <- ggtree(tree,
+                         mrsd = dates[1],
+                         size = 0.05) + 
   theme_tree2() +
   theme_grey() +
   theme(axis.line.x = element_line(),
@@ -587,7 +588,7 @@ phylotree.plot <- ggtree(print.default(tree), mrsd = dates[1]) +
   scale_x_continuous(limits = c(1985, 2020),
                      breaks = seq(from = 1985,
                                   to = 2020,
-                                  by = 5)) + #)scales::pretty_breaks(n = 10))
+                                  by = 5)) +
   xlab("Time") +
   ylab("")
 print(phylotree.plot)
@@ -595,7 +596,7 @@ print(phylotree.plot)
 ggsave(filename = "tree_vsc.pdf",
        plot = phylotree.plot,
        path = "/path/to/your/working_directory/plots",
-       width = 10, height = 8, units = "cm")
+       width = 10, height = 15, units = "cm")
 
 
 
@@ -628,7 +629,7 @@ transandnodes.plot <- ggplot(data = trans.and.nodes.long.df,
                                 "Transmission events")) +
   geom_line() +
   theme(axis.line.x = element_line(),
-        legend.position=c(0.72, 0.52),
+        legend.position=c(0.75, 0.9),
         legend.key = element_blank(),
         legend.background = element_blank()) +
   scale_x_continuous(limits = c(1985, 2020),
@@ -641,4 +642,4 @@ print(transandnodes.plot)
 ggsave(filename = "events_vsc.pdf",
        plot = transandnodes.plot,
        path = "/path/to/your/working_directory/plots",
-       width = 10, height = 8, units = "cm")
+       width = 10, height = 15, units = "cm")
