@@ -198,6 +198,134 @@ results <- simpact.run(configParams = cfg.list,
 
 datalist <- readthedata(results)
 
+
+
+# Epidemic characteristics
+
+# (iii) Prevalence
+##################
+
+
+
+# Women
+
+hiv.prev.lt25.women <- prevalence.calculator(datalist = datalist,
+                                             agegroup = c(15, 25),
+                                             timepoint = 40) %>%
+  dplyr::select(pointprevalence) %>%
+  dplyr::slice(2) %>%
+  as.numeric()
+
+hiv.prev.25.30.women <- prevalence.calculator(datalist = datalist,
+                                             agegroup = c(25, 30),
+                                             timepoint = 40) %>%
+  dplyr::select(pointprevalence) %>%
+  dplyr::slice(2) %>%
+  as.numeric()
+
+hiv.prev.30.35.women <- prevalence.calculator(datalist = datalist,
+                                              agegroup = c(30, 35),
+                                              timepoint = 40) %>%
+  dplyr::select(pointprevalence) %>%
+  dplyr::slice(2) %>%
+  as.numeric()
+
+hiv.prev.35.40.women <- prevalence.calculator(datalist = datalist,
+                                              agegroup = c(35, 40),
+                                              timepoint = 40) %>%
+  dplyr::select(pointprevalence) %>%
+  dplyr::slice(2) %>%
+  as.numeric()
+
+hiv.prev.40.45.women <- prevalence.calculator(datalist = datalist,
+                                              agegroup = c(40, 45),
+                                              timepoint = 40) %>%
+  dplyr::select(pointprevalence) %>%
+  dplyr::slice(2) %>%
+  as.numeric()
+
+hiv.prev.45.50.women <- prevalence.calculator(datalist = datalist,
+                                              agegroup = c(45, 50),
+                                              timepoint = 40) %>%
+  dplyr::select(pointprevalence) %>%
+  dplyr::slice(2) %>%
+  as.numeric()
+
+
+
+# Men
+
+hiv.prev.lt25.men <- prevalence.calculator(datalist = datalist,
+                                           agegroup = c(15, 25),
+                                           timepoint = 40) %>%
+  dplyr::select(pointprevalence) %>%
+  dplyr::slice(1) %>%
+  as.numeric()
+
+hiv.prev.25.30.men <- prevalence.calculator(datalist = datalist,
+                                            agegroup = c(25, 30),
+                                            timepoint = 40) %>%
+  dplyr::select(pointprevalence) %>%
+  dplyr::slice(1) %>%
+  as.numeric()
+
+hiv.prev.30.35.men <- prevalence.calculator(datalist = datalist,
+                                            agegroup = c(30, 35),
+                                            timepoint = 40) %>%
+  dplyr::select(pointprevalence) %>%
+  dplyr::slice(1) %>%
+  as.numeric()
+
+hiv.prev.35.40.men <- prevalence.calculator(datalist = datalist,
+                                            agegroup = c(35, 40),
+                                            timepoint = 40) %>%
+  dplyr::select(pointprevalence) %>%
+  dplyr::slice(1) %>%
+  as.numeric()
+
+hiv.prev.40.45.men <- prevalence.calculator(datalist = datalist,
+                                            agegroup = c(40, 45),
+                                            timepoint = 40) %>%
+  dplyr::select(pointprevalence) %>%
+  dplyr::slice(1) %>%
+  as.numeric()
+
+hiv.prev.45.50.men <- prevalence.calculator(datalist = datalist,
+                                            agegroup = c(45, 50),
+                                            timepoint = 40) %>%
+  dplyr::select(pointprevalence) %>%
+  dplyr::slice(1) %>%
+  as.numeric()
+
+
+
+
+
+agegroup <- c("15-24", "25-29", "30-34", "35-39", "40-44", "45-49")
+
+men.prev <- c(hiv.prev.lt25.men, hiv.prev.25.30.men, hiv.prev.30.35.men, hiv.prev.35.40.men, hiv.prev.40.45.men, hiv.prev.45.50.men)
+women.prev <- c(hiv.prev.lt25.women, hiv.prev.25.30.women, hiv.prev.30.35.women, hiv.prev.35.40.women, hiv.prev.40.45.women, hiv.prev.45.50.women)
+
+
+men.prev.dat <- data.frame(agegroup, men.prev)
+men.prev.dat$gender <- "men"
+names(men.prev.dat) <- c("age", "prev", "gender")
+
+women.prev.dat <- data.frame(agegroup, women.prev)
+women.prev.dat$gender <- "women"
+names(women.prev.dat) <- c("age", "prev", "gender")
+
+prev_data <- rbind(men.prev.dat, women.prev.dat)
+
+plot.prev.men.women <- ggplot(prev_data, aes(x=age, y=prev, colour=gender, group = gender)) + 
+  # geom_errorbar(aes(ymin=L, ymax=U), width=.1) +
+  geom_line(size=.3) +
+  geom_point() + 
+  xlab("Age groups") + ylab("HIV prevalence")
+
+
+
+
 ###########################################
 # Step 2: Construct transmission networks #
 ###########################################
