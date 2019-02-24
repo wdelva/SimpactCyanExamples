@@ -2,7 +2,9 @@
 # as explained in the README file.
 
 
-setwd("/path/to/your/working_directory/") # Change this to your own working directory
+# setwd("/path/to/your/working_directory/") # Change this to your own working directory
+
+setwd("/home/david/Desktop/SimpactCyanExamples")
 
 # Make sure compiled tools (Seq-Gen and FastTree) are in same working directory
 
@@ -206,101 +208,32 @@ datalist <- readthedata(results)
 simpact.trans.net <- transmission.network.builder(datalist = datalist, endpoint = 40)
 
 
-# Check which transmission network with at least 3 individuals
-# and return the transmission object
-
-smallest.branches <- rep(NA, times = length(simpact.trans.net))
-for (list.element in 1:length(simpact.trans.net)){
-  net.list <- simpact.trans.net[[list.element]]
-  if(length(net.list$id) > 2){
-    tree.tr <- epi2tree2(net.list)
-    smallest.branch <- min(tree.tr$edge.length)
-    smallest.branches[list.element] <- smallest.branch
-  }
-}
-
-
 
 
 ###############################
 # Step 3: Sequence simulation #
 ###############################
 
+dirseqgen <- "/home/david/Desktop/SimpactCyanExamples"
+dirfasttree <- "/home/david/Desktop/SimpactCyanExamples" 
+sub.dir.rename <- "/home/david/Desktop/SimpactCyanExamples"
 
-# Use external tool seq-gen it is fast more than phylosim embeded in RSimpactHelp
+sequence.simulation.seqgen.par(dir.seq = dirseqgen,
+                               sub.dir.rename = sub.dir.rename,
+                               simpact.trans.net = simpact.trans.net, # simpact.trans.net,
+                               seq.gen.tool = "seq-gen",
+                               seeds.num = 777,
+                               endpoint = 40,
+                               limitTransmEvents = 7, # no less than 7
+                               hiv.seq.file = "hiv.seq.C.pol.j.fasta",
+                               clust = FALSE) # hiv.seq.file lodged in work.dir
 
-# Note: transmission network with less than 3 individuals will not be considered
+# Output sequence file: C.Epidemic_seed.seq.bis.sim.nwk.fasta
 
-seed <-  123
+# Transform the sequence format to be handled by ClusterPicker
+sequ.dna <- read.dna(file = paste0(sub.dir.rename,"/C.Epidemic_seed.seq.bis.sim.nwk.fasta"), format = "interleaved")
+write.dna(sequ.dna, file = paste0(sub.dir.rename,"/C.Epidemic.fas") , format = "fasta")
 
-trans.net <- simpact.trans.net # all transmission networks
-
-num.trees <- vector() # ID of seeds # will be 0 because the transformation required to handle transmission tree from transmission network
-
-# constrained to rename IDs to -1, 0, 1, 2, ...
-
-num.i <- vector() # i_th seed in the list of seeds
-
-for(i in 1:length(trans.net)){
-  
-  tree.n <- trans.net[[i]] # transmission network for i^th seed
-  
-  if(nrow(as.data.frame(tree.n)) >= 50){ # consider transmission networks with at least 50 individuals
-    tree.i <- epi2tree2(tree.n)
-    num.trees <- c(num.trees,tree.n$id[1])
-    num.i <- c(num.i,i)
-    
-    # Save the transmission tree
-    write.tree(tree.i, file = paste("tree.model1.seed",i,".nwk", sep = ""))
-    
-    tr <- read.tree(file = paste("tree.model1.seed",i,".nwk", sep = ""))
-    
-    seq.rand <- 1
-    #
-    # tr <- read.tree(file = paste("tree.model1.seed",i,".nwk", sep = ""))
-    # n.tr <- numb.tr(tree = tr)
-    
-    n.tr <- 1
-    
-    seed.id <- tree.n$id[1]
-    
-    # # call the seed sequences - pool of viruses and rename the file
-    file.copy(paste("hiv.seq.B.pol.j.fasta", sep = ""),paste("seed.seq.bis",i,".nwk", sep = ""))
-    
-    # add the number of tree in the file and
-    write(n.tr,file = paste("seed.seq.bis",i,".nwk",sep = ""), append = TRUE)  # n.tr
-    
-    # the tree, to prepare the file to simulate the evolution of the virus across the tree
-    write.tree(tr,file = paste("seed.seq.bis",i,".nwk", sep = ""), append = TRUE)
-    
-    file.rename(from = paste("seed.seq.bis",i,".nwk", sep = ""), to = paste("seed.seq.bis",i,"Id",seed.id,".nwk", sep = ""))
-    
-    system(paste("./seq-gen -mGTR -f 0.3857, 0.1609, 0.2234, 0.2300  -a 0.9 -g 4 -i 0.5230 -r 2.9114, 12.5112, 1.2569, 0.8559, 12.9379, 1.0000 -s 0.00475  -n1 -k",seq.rand,"< seed.seq.bis",i,"Id",seed.id,".nwk -z",seed," > B.EpidemicSequences_seed_",i,".fasta",sep = ""))
-    
-    # a: shape parameter of Gamma > Gamma Rate Heterogeneity
-    # g: category of Gamma > Discrete Gamma Rate Heterogeneity
-    # r: rate matrix
-    # s: scale which is the substitution rate of pol gene
-    # z: seed
-    
-    # Keep sampling dates
-    id.samplingtime <- as.data.frame(cbind(tree.n$id, tree.n$dtimes)) # IDs and their samling times in the transmission network
-    
-    write.csv(id.samplingtime,file=paste("samplingtimes_seed_",i,".csv", sep = ""))
-    
-  }
-}
-
-# Chosen transmission networks with at least 50 individuals
-
-IDs.transm <- num.i # vector of of seeds chosen in the list of seeds
-
-# > IDs.transm
-# [1]  11 15
-# > nrow(data.frame(simpact.trans.net[[11]]))
-# [1] 426
-# > nrow(data.frame(simpact.trans.net[[15]]))
-# [1] 52
 
 
 
@@ -308,141 +241,22 @@ IDs.transm <- num.i # vector of of seeds chosen in the list of seeds
 # Step 4: Construct time stamped phylogenetic trees #
 #####################################################
 
+tree.calib <- phylogenetic.tree.fasttree.par(dir.tree = dirfasttree,
+                                             sub.dir.rename = sub.dir.rename,
+                                             fasttree.tool = "FastTree",
+                                             calendar.dates = "samplingtimes.all.csv",
+                                             simseqfile = "C.Epidemic.fas",
+                                             count.start = 1977,
+                                             endsim = 40,
+                                             clust = FALSE)
 
-# 4.1. Build phylogenetic trees
+# write.tree(tree.calib, file = paste0(sub.dir.rename, paste0("/calibrated.tree.",simseqfile,".tree")))
+# calibrated.tree.C.Epidemic.fas.tree
 
-for (j in 1:length(IDs.transm)){
-  
-  id.trans <- IDs.transm[j]
-  # External IQ-TREE
-  # system(" ./iqtree-omp -s HIV.Env.gene.fasta -m GTR+R4 -nt AUTO -alrt 1000 -bb 1000")
-  # Consensus tree written to HIV.Env.gene.fasta.contree
-  # Reading input trees file HIV.Env.gene.fasta.contree
-  # Log-likelihood of consensus tree: -10565.685
-  #
-  # Analysis results written to:
-  #   IQ-TREE report:                HIV.Env.gene.fasta.iqtree
-  # Maximum-likelihood tree:       HIV.Env.gene.fasta.treefile
-  # Likelihood distances:          HIV.Env.gene.fasta.mldist
-  #
-  # Ultrafast bootstrap approximation results written to:
-  #   Split support values:          HIV.Env.gene.fasta.splits.nex
-  # Consensus tree:                HIV.Env.gene.fasta.contree
-  # Screen log file:               HIV.Env.gene.fasta.log
-  
-  # system(paste("./iqtree-omp -s", paste("B.EpidemicSequences_seed_",id.trans,".fasta", sep = ""), " -nt AUTO -alrt 1000 -bb 1000"))
-  
-  # Compiling FastTree
-  # gcc -DUSE_DOUBLE -O3 -finline-functions -funroll-loops -Wall -o FastTree FastTree.c -lm
-  
-  system(paste("./FastTree -gtr -nt <", paste("B.EpidemicSequences_seed_",id.trans,".fasta", sep = ""), paste(">B.EpidemicSequences_seed_",id.trans,".fasta.tree", sep = "")))
-  
-  
-}
-
-
-# 4.2. Calibrated internal nodes of the phylogenetic trees
-
-# Function to tranform sampling time into calendar time - dates in named vector to be handled
-# by treedater during internal nodes calibration
-
-dates.Transform.NamedVector  <- function(dates=dates){
-  dates.val <- 1977+40-dates$V2 # dates datalist$itable$population.simtime[1] - dates$V2 + 1977
-  names(dates.val) <- as.character(dates$V1) # names are the names of the tips
-  return(dates.val)
-}
-
-
-
-# For ALL transmission networks IDs.transm #
-############################################
-
-
-# Not necessary for the purpose of this example to prove the concept
-# of relatedness of HIV phylodynamics and transmission network
-
-for (j in 1:length(IDs.transm)){
-  
-  id.trans <- IDs.transm[j]
-  
-  tree.const <- read.tree(paste("B.EpidemicSequences_seed_",id.trans,".fasta.tree", sep = ""))
-  
-  samp.dates <- read.csv(paste("samplingtimes_seed_",id.trans,".csv", sep = ""))
-  
-  time.samp <- dates.Transform.NamedVector(dates=samp.dates)
-  
-  tree.tips <- as.numeric(tree.const$tip.label)
-  
-  Ord.tree.dates <- vector()
-  for(i in 1:length(tree.tips)){
-    for(j in 1:length(time.samp)){
-      if(tree.tips[i] == samp.dates$V1[j]){
-        Ord.tree.dates <- c(Ord.tree.dates, time.samp[j])
-      }
-    }
-  }
-  
-  # Use of library(treedater) to calibrate internal nodes
-  dater.tree <- dater(tree.const, Ord.tree.dates, s = 3012) # s is the length of sequence
-  
-  save(dater.tree, file = paste("dated.tree.object_seed_",id.trans,".Rdata", sep = ""))
-  
-  # Save the tree
-  write.tree(dater.tree, file = paste("calibratedTree_",id.trans,".nwk", sep = ""))
-  
-}
-
-
-# For ONE transmission network IDs.transm[1] #
-##############################################
-
-# For the purpose of this exercise we will consider ONE transmission network 
-
-# Calibration of the phylogenetic tree produced with sequences from
-# transmission network 11 (IDs.transm[1])
-
-id.trans <- IDs.transm[1] # 11
-
-tree.const <- read.tree(paste("B.EpidemicSequences_seed_",id.trans,".fasta.tree", sep = ""))
-
-samp.dates <- read.csv(paste("samplingtimes_seed_",id.trans,".csv", sep = ""))
-
-time.samp <- dates.Transform.NamedVector(dates=samp.dates)
-
-tree.tips <- as.numeric(tree.const$tip.label)
-
-
-# Sort sampling dates obtained with dates.Transform.NamedVector function
-# in same order as in the phylogenetic tree
-
-Ord.tree.dates <- vector()
-
-for(i in 1:length(tree.tips)){
-  for(j in 1:length(time.samp)){
-    if(tree.tips[i] == samp.dates$V1[j]){
-      Ord.tree.dates <- c(Ord.tree.dates, time.samp[j])
-    }
-  }
-}
-
-
-
-
-# Use of library(treedater) to calibrate internal nodes
-
-dater.tree <- dater(tree.const, Ord.tree.dates, s = 3012) # s is the length of sequence
-
-# dater.tree is an object with much information on the tree and evolutionary parameters
-
-# Save the object
-save(dater.tree, file = "dater.tree.RData")
-
-# We can save the tree
-write.tree(dater.tree, file = paste("calibratedTree_",id.trans,".nwk", sep = ""))
 
 # Node age with picante package
 
-N <- node.age(dater.tree)
+N <- node.age(tree.calib)
 
 # Time to MRCA: internal nodes ages
 
@@ -451,6 +265,15 @@ int.node.age <- N$Ti
 
 latest.samp <- N$timeToMRCA+N$timeOfMRCA # latest sampling date
 
+
+# Molecular clock parameters
+
+pbtd <- treedater::parboot.treedater(tree.calib)
+
+# $pbtd
+#                           pseudo ML        2.5 %       97.5 %
+# Time of common ancestor 1.988430e+03 1.987969e+03 1.989313e+03
+# Mean substitution rate  5.408746e-03 5.284261e-03 5.536164e-03
 
 
 #####################################################################################
@@ -463,28 +286,36 @@ latest.samp <- N$timeToMRCA+N$timeOfMRCA # latest sampling date
 # We choose  transmission network 11 which is IDs.transm[1]
 
 
-## Transmission network of seed 11
+## Entire transmission network 
+
 trans.net <- simpact.trans.net
 
-tra.net.11 <- trans.net[[11]]
+trans.net <- data.table::rbindlist(simpact.trans.net)
 
-tra.net.11$dtimes <- abs(tra.net.11$dtimes-40)+1977
-tra.net.11$itimes <- abs(tra.net.11$itimes-40)+1977
+trans.net <- dplyr::filter(trans.net, trans.net$parent != "-1") # remove universal seed individuals
+
+# We considered the epidemic to start at 10 and individuals infected up to 40 simulation time: 30 years of epidemic
+# With a seed sequence sampled in 1989, we assume it existed two years before (1987)
+# It means that the simulation started in 1977, and the infection in 1987 for 30 years in 2017
+
+trans.net$dtimes <- abs(trans.net$dtimes-40)+1977
+trans.net$itimes <- abs(trans.net$itimes-40)+1977
 
 min.val = 1977
-max.val = round(max(tra.net.11$itimes))
+max.val = round(max(trans.net$itimes))
 
 
 
 # (i) NUmber of internal nodes & transmission events
 
-step.int=1
+step.int=1 # in one year
+
 d <- (max.val-min.val)/step.int
 
-dat.f.trans <- as.data.frame(tra.net.11)
+dat.f.trans <- as.data.frame(trans.net)
 dt.node.age.dt <- int.node.age
 
-numb.tra <- vector() # initialize transmission events
+numC.tra <- vector() # initialize transmission events
 i.vec <- vector() # initialise time intervals
 int.node.vec <- vector() # initialize internal nodes
 
@@ -492,8 +323,8 @@ for (i in 1:d) {
   inf <- 1976+i
   sup <- 1977+i
   dat.f.trans.i <- dat.f.trans[which(dat.f.trans$itimes <= sup & dat.f.trans$itimes  > inf),]
-  numb.i <- nrow(dat.f.trans.i)
-  numb.tra <- c(numb.tra, numb.i)
+  numC.i <- nrow(dat.f.trans.i)
+  numC.tra <- c(numC.tra, numC.i)
   i.vec <- c(i.vec, sup)
   int.node.age.i <- int.node.age[int.node.age <= sup & dt.node.age.dt > inf]
   int.node.vec <- c(int.node.vec,length(int.node.age.i))
@@ -502,7 +333,7 @@ for (i in 1:d) {
 
 # (ii) Transmission network
 
-graph.build <- as.data.frame(trans.net[[11]])
+graph.build <- as.data.frame(trans.net)
 
 graph.build[,4] <- as.character(graph.build$parent) # donors
 graph.build[,3] <- as.character(graph.build$id) # recipients
@@ -525,10 +356,11 @@ transNet.yrs.Old <- ga.graph
 # Objects needed for the figure:
 SimpactPaperPhyloExample <- list()
 SimpactPaperPhyloExample$transNet.yrs.Ord <- transNet.yrs.Old
-SimpactPaperPhyloExample$dater.tree <- dater.tree
+SimpactPaperPhyloExample$dater.tree <- tree.calib
 SimpactPaperPhyloExample$i.vec <- i.vec
 SimpactPaperPhyloExample$int.node.vec <- int.node.vec
-SimpactPaperPhyloExample$numb.tra <- numb.tra
+SimpactPaperPhyloExample$numC.tra <- numC.tra
+SimpactPaperPhyloExample$pbtd <- pbtd
 save(SimpactPaperPhyloExample, file = "SimpactPaperPhyloExample.RData")
 
 load(file = "/path/to/your/working_directory/SimpactPaperPhyloExample.RData")
@@ -567,7 +399,7 @@ ggsave(filename = "network_vsc.pdf",
 
 
 
-# B. Phylogenetic tree
+# C. Phylogenetic tree
 
 tree <- SimpactPaperPhyloExample$dater.tree
 class(tree) <- "phylo" # Removing "treedater" as one of the classes that this object belongs to.
@@ -606,7 +438,7 @@ ggsave(filename = "tree_vsc.pdf",
 calendaryear.isrelevant <- SimpactPaperPhyloExample$i.vec >= 1987
 calendaryear <- SimpactPaperPhyloExample$i.vec[calendaryear.isrelevant]
 intern.nodes <- SimpactPaperPhyloExample$int.node.vec[calendaryear.isrelevant]
-trans.events <- SimpactPaperPhyloExample$numb.tra[calendaryear.isrelevant]
+trans.events <- SimpactPaperPhyloExample$numC.tra[calendaryear.isrelevant]
 
 trans.and.nodes.df <- data.frame(calendaryear = calendaryear,
                                  intern.nodes = intern.nodes,
@@ -643,3 +475,17 @@ ggsave(filename = "events_vsc.pdf",
        plot = transandnodes.plot,
        path = "/path/to/your/working_directory/plots",
        width = 10, height = 15, units = "cm")
+
+
+
+
+
+# Visualize LTT (molecular clock)
+
+pbtd <- SimpactPaperPhyloExample$pbtd
+
+
+treedater::plot.parboot.ltt(pbtd) # export figure
+
+
+
