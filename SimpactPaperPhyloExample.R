@@ -907,11 +907,13 @@ source("util.seq.cov.weight.R")
 
 seq.cov <- 50
 
-mCAr.IDs <- IDs.Seq.Random.skew(simpact.trans.net = simpact.trans.net, 
-                                limitTransmEvents = 7,
-                                timewindow = c(10,40), 
-                                seq.cov = seq.cov, 
-                                age.limit = 100)
+mCAr.IDs <- IDs.Seq.Random.skew(simpact.trans.net = simpact.trans.net,
+                                 limitTransmEvents = 7,
+                                 timewindow = c(10,40),
+                                 seq.cov = 50,
+                                 age.limit=100,
+                                 age.group = c(25, 40),
+                                 propor=0.7)
 
 
 # Select sequences from the pool of alignment
