@@ -1254,6 +1254,40 @@ RMSE.50 <- sqrt(sum((exp(trans.and.nodes.long.enriched.50.df$percentage.events[1
 # RMSE of exponentiated percentages
 RMSE.50.skewed <- sqrt(sum((exp(trans.and.nodes.long.enriched.50.skewed.df$percentage.events[1:31]) - exp(trans.and.nodes.long.enriched.50.skewed.df$percentage.events[32:62]))^2) / 31)
 
+# The revised Figure 4c
+trans.and.nodes.long.enriched.df$Scenario <- "100% sequencing"
+trans.and.nodes.long.enriched.50.df$Scenario <- "50% randomly sampled sequencing"
+trans.and.nodes.long.enriched.50.skewed.df$Scenario <- "50% biased sampled sequencing"
+trans.and.nodes.long.enriched.combined <- rbind(trans.and.nodes.long.enriched.df,
+                                                trans.and.nodes.long.enriched.50.df,
+                                                trans.and.nodes.long.enriched.50.skewed.df)
+
+trans.and.nodes.long.enriched.combined <- trans.and.nodes.long.enriched.combined %>%
+  group_by(Scenario) 
+
+transandnodes.plot <- ggplot(data = trans.and.nodes.long.enriched.combined,
+                             aes(x = calendaryear,
+                                 y = percentage.events,
+                                 colour = factor(Events),
+                                 linetype = Scenario)) +
+  geom_point(size = 2.5) +
+  scale_color_brewer(palette="Set1",
+                     name = "",
+                     labels = c("Internal nodes",
+                                "Transmission events")) +
+  geom_line(size = 1.2) +
+  theme(axis.line.x = element_line(),
+        legend.position=c(0.75, 0.9),
+        legend.key = element_blank(),
+        legend.background = element_blank()) +
+  scale_x_continuous(limits = c(1985, 2020),
+                     breaks = seq(from = 1985,
+                                  to = 2020,
+                                  by = 5)) +
+  xlab("Time")
+print(transandnodes.plot)
+
+
 
 # Visualize LTT (molecular clock)
 
