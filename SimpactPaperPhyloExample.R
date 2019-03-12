@@ -20,6 +20,7 @@ library(lubridate)
 library(ggtree)
 library(ggplot2)
 library(tidyr)
+library(dplyr)
 
 
 inputvector <- c(123, -0.52, -0.05, 5, 7, 3, 0.25, -0.3, -0.1, 
@@ -600,9 +601,33 @@ ggsave(filename = "events_vsc.pdf",
        path = "/path/to/your/working_directory/plots",
        width = 10, height = 15, units = "cm")
 
+## Adding density to dataset trans.and.nodes.long.df
+trans.and.nodes.long.enriched.df <- trans.and.nodes.long.df %>%
+  group_by(Events) %>%
+  mutate(total.events = sum(Number),
+         percentage.events = Number / total.events)
 
-
-
+# New plot comparing densities  
+transandnodes.plot <- ggplot(data = trans.and.nodes.long.enriched.df,
+                             aes(x = calendaryear,
+                                 y = percentage.events,
+                                 colour = factor(Events))) +
+  geom_point() +
+  scale_color_brewer(palette="Set1",
+                     name = "",
+                     labels = c("Internal nodes",
+                                "Transmission events")) +
+  geom_line() +
+  theme(axis.line.x = element_line(),
+        legend.position=c(0.75, 0.9),
+        legend.key = element_blank(),
+        legend.background = element_blank()) +
+  scale_x_continuous(limits = c(1985, 2020),
+                     breaks = seq(from = 1985,
+                                  to = 2020,
+                                  by = 5)) +
+  xlab("Time")
+print(transandnodes.plot)
 
 # Visualize LTT (molecular clock)
 
@@ -770,6 +795,7 @@ SimpactPaperPhyloExample.cov$pbtd <- pbtd.cov
 save(SimpactPaperPhyloExample.cov, file = "SimpactPaperPhyloExample.cov.RData")
 
 load(file = "/path/to/your/working_directory/SimpactPaperPhyloExample.cov.RData")
+
 # A. Transmission network
 
 network <- SimpactPaperPhyloExample.cov$transNet.yrs.Ord
@@ -883,8 +909,33 @@ ggsave(filename = "events_vsc.cov.pdf",
        width = 10, height = 15, units = "cm")
 
 
+## Adding density to dataset trans.and.nodes.long.df
+trans.and.nodes.long.enriched.50.df <- trans.and.nodes.long.df %>%
+  group_by(Events) %>%
+  mutate(total.events = sum(Number),
+         percentage.events = Number / total.events)
 
-
+## New plot, comparing densities
+transandnodes.plot <- ggplot(data = trans.and.nodes.long.enriched.50.df,
+                             aes(x = calendaryear,
+                                 y = percentage.events,
+                                 colour = factor(Events))) +
+  geom_point() +
+  scale_color_brewer(palette="Set1",
+                     name = "",
+                     labels = c("Internal nodes",
+                                "Transmission events")) +
+  geom_line() +
+  theme(axis.line.x = element_line(),
+        legend.position=c(0.75, 0.9),
+        legend.key = element_blank(),
+        legend.background = element_blank()) +
+  scale_x_continuous(limits = c(1985, 2020),
+                     breaks = seq(from = 1985,
+                                  to = 2020,
+                                  by = 5)) +
+  xlab("Time")
+print(transandnodes.plot)
 
 # Visualize LTT (molecular clock)
 
@@ -898,9 +949,8 @@ treedater::plot.parboot.ltt(pbtd) # export figure
 # Scenario 2: sample 50% of the sequences, but this time, the sampling weights are different, 
 # such that 25-40 year olds are relatively oversampled and the other age groups are relatively undersampled
 
+# Sourcing the IDs.Seq.Random.skew function
 source("util.seq.cov.weight.R")
-
-
 
 # Select IDs 
 #############
@@ -911,9 +961,9 @@ mCAr.IDs <- IDs.Seq.Random.skew(simpact.trans.net = simpact.trans.net,
                                  limitTransmEvents = 7,
                                  timewindow = c(10,40),
                                  seq.cov = 50,
-                                 age.limit=100,
+                                 age.limit = 100,
                                  age.group = c(25, 40),
-                                 propor=0.7)
+                                 propor = 0.8)
 
 
 # Select sequences from the pool of alignment
@@ -1165,7 +1215,44 @@ ggsave(filename = "events_vsc.cov2.pdf",
        width = 10, height = 15, units = "cm")
 
 
+## Adding density to dataset trans.and.nodes.long.df
+trans.and.nodes.long.enriched.50.skewed.df <- trans.and.nodes.long.df %>%
+  group_by(Events) %>%
+  mutate(total.events = sum(Number),
+         percentage.events = Number / total.events)
 
+## New plot, comparing densities
+
+transandnodes.plot <- ggplot(data = trans.and.nodes.long.enriched.50.skewed.df,
+                             aes(x = calendaryear,
+                                 y = percentage.events,
+                                 colour = factor(Events))) +
+  geom_point() +
+  scale_color_brewer(palette="Set1",
+                     name = "",
+                     labels = c("Internal nodes",
+                                "Transmission events")) +
+  geom_line() +
+  theme(axis.line.x = element_line(),
+        legend.position=c(0.75, 0.9),
+        legend.key = element_blank(),
+        legend.background = element_blank()) +
+  scale_x_continuous(limits = c(1985, 2020),
+                     breaks = seq(from = 1985,
+                                  to = 2020,
+                                  by = 5)) +
+  xlab("Time")
+print(transandnodes.plot)
+
+
+# RMSE of exponentiated percentages
+RMSE <- sqrt(sum((exp(trans.and.nodes.long.enriched.df$percentage.events[1:31]) - exp(trans.and.nodes.long.enriched.df$percentage.events[32:62]))^2) / 31)
+
+# RMSE of exponentiated percentages
+RMSE.50 <- sqrt(sum((exp(trans.and.nodes.long.enriched.50.df$percentage.events[1:31]) - exp(trans.and.nodes.long.enriched.50.df$percentage.events[32:62]))^2) / 31)
+
+# RMSE of exponentiated percentages
+RMSE.50.skewed <- sqrt(sum((exp(trans.and.nodes.long.enriched.50.skewed.df$percentage.events[1:31]) - exp(trans.and.nodes.long.enriched.50.skewed.df$percentage.events[32:62]))^2) / 31)
 
 
 # Visualize LTT (molecular clock)
