@@ -1284,7 +1284,8 @@ transandnodes.plot <- ggplot(data = trans.and.nodes.long.enriched.combined,
                      breaks = seq(from = 1985,
                                   to = 2020,
                                   by = 5)) +
-  xlab("Time")
+  xlab("Time") +
+  ylab("Relative frequency")
 print(transandnodes.plot)
 
 
