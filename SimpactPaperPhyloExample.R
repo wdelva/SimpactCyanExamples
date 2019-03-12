@@ -22,6 +22,10 @@ library(ggplot2)
 library(tidyr)
 library(dplyr)
 
+# Sourcing the IDs.Seq.Random.skew function and renaming IDS in transmission table 
+# to match tips names in the tree
+source("util.seq.cov.weight.R")
+
 
 inputvector <- c(123, -0.52, -0.05, 5, 7, 3, 0.25, -0.3, -0.1, 
                  -1, -90, 0.5, 0.05, -0.14, 5, 7, 12, -2.7) 
@@ -333,8 +337,6 @@ plot.prev.men.women <- ggplot(prev_data, aes(x=age, y=prev, colour=gender, group
 simpact.trans.net <- transmission.network.builder(datalist = datalist, endpoint = 40)
 
 
-
-
 ###############################
 # Step 3: Sequence simulation #
 ###############################
@@ -413,9 +415,12 @@ pbtd <- treedater::parboot.treedater(tree.calib)
 
 ## Entire transmission network 
 
-trans.net <- simpact.trans.net
+simpact.trans.net.new <- tips.labels(simpact.trans.net = simpact.trans.net,
+                                     limitTransmEvents = 7)
 
-trans.net <- data.table::rbindlist(simpact.trans.net)
+trans.net <- simpact.trans.net.new
+
+# trans.net <- data.table::rbindlist(simpact.trans.net.new)
 
 trans.net <- dplyr::filter(trans.net, trans.net$parent != "-1") # remove universal seed individuals
 
@@ -719,11 +724,14 @@ pbtd.cov <- treedater::parboot.treedater(mCAr.IDs.tree.calib)
 
 ## Entire transmission network 
 
-trans.net <- simpact.trans.net
+trans.net <- simpact.trans.net.new
 
-trans.net <- data.table::rbindlist(simpact.trans.net)
+# trans.net <- data.table::rbindlist(simpact.trans.net)
 
 trans.net <- dplyr::filter(trans.net, trans.net$parent != "-1") # remove universal seed individuals
+
+# save(trans.net, file = "trans.net.RData")
+
 
 # We considered the epidemic to start at 10 and individuals infected up to 40 simulation time: 30 years of epidemic
 # With a seed sequence sampled in 1989, we assume it existed two years before (1987)
@@ -794,7 +802,19 @@ SimpactPaperPhyloExample.cov$numC.tra <- numC.tra.cov
 SimpactPaperPhyloExample.cov$pbtd <- pbtd.cov
 save(SimpactPaperPhyloExample.cov, file = "SimpactPaperPhyloExample.cov.RData")
 
-load(file = "/path/to/your/working_directory/SimpactPaperPhyloExample.cov.RData")
+load(file = "/home/david/Desktop/SimpactCyanExamples/SimpactPaperPhyloExample.cov.RData")
+
+load(file = "/home/david/Desktop/SimpactCyanExamples/trans.net.RData")
+
+# % of 25 - 40 in datasets of scenario 2
+tree1 <- SimpactPaperPhyloExample.cov$dater.tree
+tips.tree1 <- tree1$tip.label
+net.1 <- dplyr::filter(trans.net, trans.net$id%in%tips.tree1) # thanks to id renamed we can filter with dplyr
+
+net.1.25.40 <- dplyr::filter(net.1, net.1$age.i>=25 & net.1$age.i < 40)
+
+net.1.25.40.per <- nrow(net.1.25.40)/nrow(net.1)
+
 
 # A. Transmission network
 
@@ -836,8 +856,8 @@ ggsave(filename = "network_vsc.cov.pdf",
 tree <- SimpactPaperPhyloExample.cov$dater.tree
 class(tree) <- "phylo" # Removing "treedater" as one of the classes that this object belongs to.
 sim.start.year <- 1987
-first.transmission <- min(SimpactPaperPhyloExample$dater.tree$sts)
-mrsd <- max(SimpactPaperPhyloExample$dater.tree$sts)
+first.transmission <- min(SimpactPaperPhyloExample.cov$dater.tree$sts)
+mrsd <- max(SimpactPaperPhyloExample.cov$dater.tree$sts)
 
 dates <- format(date_decimal(c(mrsd, first.transmission)), "%Y-%m-%d")
 tree$root.edge <-  - sim.start.year
@@ -949,8 +969,7 @@ treedater::plot.parboot.ltt(pbtd) # export figure
 # Scenario 2: sample 50% of the sequences, but this time, the sampling weights are different, 
 # such that 25-40 year olds are relatively oversampled and the other age groups are relatively undersampled
 
-# Sourcing the IDs.Seq.Random.skew function
-source("util.seq.cov.weight.R")
+
 
 # Select IDs 
 #############
@@ -958,12 +977,12 @@ source("util.seq.cov.weight.R")
 seq.cov <- 50
 
 mCAr.IDs <- IDs.Seq.Random.skew(simpact.trans.net = simpact.trans.net,
-                                 limitTransmEvents = 7,
-                                 timewindow = c(10,40),
-                                 seq.cov = 50,
-                                 age.limit = 100,
-                                 age.group = c(25, 40),
-                                 propor = 0.8)
+                                limitTransmEvents = 7,
+                                timewindow = c(10,40),
+                                seq.cov = 50,
+                                age.limit = 100,
+                                age.group = c(25, 40),
+                                propor = 0.8)
 
 
 # Select sequences from the pool of alignment
@@ -1013,7 +1032,7 @@ latest.samp.cov2 <- N.cov2$timeToMRCA+N.cov2$timeOfMRCA # latest sampling date
 # 
 # For more detailed output, $trees provides a list of each fit to each simulation 
 # > 
-  
+
 #####################################################################################
 # Step 5: Compute transmission events and internal nodes in one year time intervals #
 #####################################################################################
@@ -1026,11 +1045,11 @@ latest.samp.cov2 <- N.cov2$timeToMRCA+N.cov2$timeOfMRCA # latest sampling date
 
 ## Entire transmission network 
 
-trans.net <- simpact.trans.net
+trans.net <- simpact.trans.net.new
 
-trans.net <- data.table::rbindlist(simpact.trans.net)
+# trans.net <- data.table::rbindlist(simpact.trans.net)
 
-trans.net <- dplyr::filter(trans.net, trans.net$parent != "-1") # remove universal seed individuals
+trans.net <- dplyr::filter(trans.net, simpact.trans.net.new$parent != "-1") # remove universal seed individuals
 
 # We considered the epidemic to start at 10 and individuals infected up to 40 simulation time: 30 years of epidemic
 # With a seed sequence sampled in 1989, we assume it existed two years before (1987)
