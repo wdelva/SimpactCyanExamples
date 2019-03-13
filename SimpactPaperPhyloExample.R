@@ -494,6 +494,9 @@ SimpactPaperPhyloExample$pbtd <- pbtd
 save(SimpactPaperPhyloExample, file = "SimpactPaperPhyloExample.RData")
 
 load(file = "/path/to/your/working_directory/SimpactPaperPhyloExample.RData")
+
+load(file = "/home/david/Desktop/SimpactCyanExamples/trans.net.RData")
+
 # A. Transmission network
 
 network <- SimpactPaperPhyloExample$transNet.yrs.Ord
@@ -1127,7 +1130,7 @@ SimpactPaperPhyloExample.cov2$numC.tra <- numC.tra.cov2
 SimpactPaperPhyloExample.cov2$pbtd <- pbtd.cov2
 save(SimpactPaperPhyloExample.cov2, file = "SimpactPaperPhyloExample.cov2.RData")
 
-  load(file = "/home/david/Desktop/SimpactCyanExamples/SimpactPaperPhyloExample.cov2.RData")
+load(file = "/home/david/Desktop/SimpactCyanExamples/SimpactPaperPhyloExample.cov2.RData")
 
 # % of 25 - 40 in datasets of scenario 2
 tree2 <- SimpactPaperPhyloExample.cov2$dater.tree
@@ -1142,7 +1145,7 @@ net2.25.40 <- dplyr::filter(trans.net, trans.net$age.i>=25, trans.net$age.i < 40
 
 N.net2.25.40 <- nrow(net2.25.40)
 
-N.net2.tree.25.40/N.net2.25.40 # 0.7474747
+N.net2.tree.25.40/N.net2.25.40 # 0.8535354
 
 
 
