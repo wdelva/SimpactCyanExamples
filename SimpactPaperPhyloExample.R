@@ -811,9 +811,15 @@ tree1 <- SimpactPaperPhyloExample.cov$dater.tree
 tips.tree1 <- tree1$tip.label
 net.1 <- dplyr::filter(trans.net, trans.net$id%in%tips.tree1) # thanks to id renamed we can filter with dplyr
 
-net.1.25.40 <- dplyr::filter(net.1, net.1$age.i>=25 & net.1$age.i < 40)
+net.tree.25.40 <- dplyr::filter(net.1, net.1$age.i>=25 & net.1$age.i < 40)
 
-net.1.25.40.per <- nrow(net.1.25.40)/nrow(net.1)
+N.net.tree.25.40 <- nrow(net.tree.25.40)
+
+net.25.40 <- dplyr::filter(trans.net, trans.net$age.i>=25, trans.net$age.i < 40)
+
+N.net.25.40 <- nrow(net.25.40)
+
+N.net.tree.25.40/N.net.25.40 # 0.4393939
 
 
 # A. Transmission network
@@ -1023,7 +1029,8 @@ latest.samp.cov2 <- N.cov2$timeToMRCA+N.cov2$timeOfMRCA # latest sampling date
 
 # Molecular clock parameters
 
-# pbtd.cov2 <- treedater::parboot.treedater(mCAr.IDs.tree.calib)
+pbtd.cov2 <- treedater::parboot.treedater(mCAr.IDs.tree.calib)
+
 # 
 # > pbtd.cov2
 #                               pseudo ML        2.5 %       97.5 %
@@ -1120,7 +1127,25 @@ SimpactPaperPhyloExample.cov2$numC.tra <- numC.tra.cov2
 SimpactPaperPhyloExample.cov2$pbtd <- pbtd.cov2
 save(SimpactPaperPhyloExample.cov2, file = "SimpactPaperPhyloExample.cov2.RData")
 
-load(file = "/path/to/your/working_directory/SimpactPaperPhyloExample.cov2.RData")
+  load(file = "/home/david/Desktop/SimpactCyanExamples/SimpactPaperPhyloExample.cov2.RData")
+
+# % of 25 - 40 in datasets of scenario 2
+tree2 <- SimpactPaperPhyloExample.cov2$dater.tree
+tips.tree2 <- tree2$tip.label
+net.2 <- dplyr::filter(trans.net, trans.net$id%in%tips.tree2) # thanks to id renamed we can filter with dplyr
+
+net2.tree.25.40 <- dplyr::filter(net.2, net.2$age.i>=25 & net.2$age.i < 40)
+
+N.net2.tree.25.40 <- nrow(net2.tree.25.40)
+
+net2.25.40 <- dplyr::filter(trans.net, trans.net$age.i>=25, trans.net$age.i < 40)
+
+N.net2.25.40 <- nrow(net2.25.40)
+
+N.net2.tree.25.40/N.net2.25.40 # 0.7474747
+
+
+
 # A. Transmission network
 
 network <- SimpactPaperPhyloExample.cov2$transNet.yrs.Ord
