@@ -493,7 +493,7 @@ SimpactPaperPhyloExample$numC.tra <- numC.tra
 SimpactPaperPhyloExample$pbtd <- pbtd
 save(SimpactPaperPhyloExample, file = "SimpactPaperPhyloExample.RData")
 
-load(file = "/path/to/your/working_directory/SimpactPaperPhyloExample.RData")
+load(file = "/home/david/Desktop/SimpactCyanExamples/SimpactPaperPhyloExample.RData")
 
 load(file = "/home/david/Desktop/SimpactCyanExamples/trans.net.RData")
 
@@ -1132,6 +1132,31 @@ save(SimpactPaperPhyloExample.cov2, file = "SimpactPaperPhyloExample.cov2.RData"
 
 load(file = "/home/david/Desktop/SimpactCyanExamples/SimpactPaperPhyloExample.cov2.RData")
 
+
+
+# trans.and.nodes.long.enriched.df <- list()
+# trans.and.nodes.long.enriched.df$trans <- SimpactPaperPhyloExample$numC.tra
+# trans.and.nodes.long.enriched.df$nodes <- SimpactPaperPhyloExample$int.node.vec
+# 
+# 
+# trans.and.nodes.long.enriched.50.df <- list()
+# trans.and.nodes.long.enriched.50.df$trans <- SimpactPaperPhyloExample.cov$numC.tra
+# trans.and.nodes.long.enriched.50.df$nodes <- SimpactPaperPhyloExample.cov$int.node.vec
+# 
+# trans.and.nodes.long.enriched.50.skewed.df <- list()
+# trans.and.nodes.long.enriched.50.skewed.df$trans <- SimpactPaperPhyloExample.cov2$numC.tra
+# trans.and.nodes.long.enriched.50.skewed.df$nodes <- SimpactPaperPhyloExample.cov2$int.node.vec
+# 
+# 
+# 
+# trans.and.nodes.long.enriched.combined  <- list()
+# trans.and.nodes.long.enriched.combined$trans.and.nodes.long.enriched.df <- trans.and.nodes.long.enriched.df
+# trans.and.nodes.long.enriched.combined$trans.and.nodes.long.enriched.50.df <- trans.and.nodes.long.enriched.50.df
+# trans.and.nodes.long.enriched.combined$trans.and.nodes.long.enriched.50.skewed.df <- trans.and.nodes.long.enriched.50.skewed.df
+# 
+# save(trans.and.nodes.long.enriched.combined, file = "trans.and.nodes.long.enriched.combined.RData")
+
+
 # % of 25 - 40 in datasets of scenario 2
 tree2 <- SimpactPaperPhyloExample.cov2$dater.tree
 tips.tree2 <- tree2$tip.label
@@ -1345,3 +1370,12 @@ pbtd <- SimpactPaperPhyloExample.cov2$pbtd
 treedater::plot.parboot.ltt(pbtd) # export figure
 
 
+# # Data frames of results
+# 
+# trans.and.nodes.long.enriched.df <- data.frame(SimpactPaperPhyloExample$i.vec, SimpactPaperPhyloExample$int.node.vec, SimpactPaperPhyloExample$numC.tra)
+# trans.and.nodes.long.enriched.50.df <- data.frame(SimpactPaperPhyloExample.cov$i.vec, SimpactPaperPhyloExample.cov$int.node.vec, SimpactPaperPhyloExample.cov$numC.tra)
+# trans.and.nodes.long.enriched.50.skewed.df <- data.frame(SimpactPaperPhyloExample.cov2$i.vec, SimpactPaperPhyloExample.cov2$int.node.vec, SimpactPaperPhyloExample.cov2$numC.tra)
+# 
+# 
+# save(trans.and.nodes.long.enriched.df, trans.and.nodes.long.enriched.50.df, trans.and.nodes.long.enriched.50.skewed.df, file = "combined.objects.RData")
+# 
