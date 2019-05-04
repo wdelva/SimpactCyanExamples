@@ -105,7 +105,7 @@ All code is written in R. R is a statistical programming language and software p
 
   install_github("j0r1/readcsvcolumns/pkg")
 
-  install_github("wdelva/RSimpactHelp”, dependencies = TRUE)
+  install_github("wdelva/RSimpactHelp", dependencies = TRUE)
 
   p_load(Rcpp, ape, expoTree, data.table, readr, phangorn, dplyr, adephylo, treedater, geiger, picante, igraph, network, intergraph, ggtree, lubridate, ggplot2, ggnetwork, metafolio, magrittr, dplyr, tidyr, geomnet, RSimpactCyan, RSimpactHelper)
  
