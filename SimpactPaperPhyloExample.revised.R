@@ -1,6 +1,6 @@
 # Before running the code below, make sure you have followed the instructions for installing all the required software,
 # as explained in the README file.
-setwd("/Users/wimdelva/Documents/SimpactCyanExamples")
+setwd("/Users/delvaw/Documents/SimpactCyanExamples")
 
 # Make sure compiled tools (Seq-Gen and FastTree) are in same working directory
 
@@ -192,19 +192,25 @@ results <- tryCatch(simpact.run(configParams = cfg.list,
                                 intervention = ART.factual,
                                 seed = seedid),
                     error = simpact.errFunction)
-datalist <- readthedata(results)
+datalist.phylo <- readthedata(results)
 
 ###########################################
 # Step 2: Construct transmission networks #
 ###########################################
 # Produce a list of transmission networks in epi object format
-simpact.trans.net <- transmission.network.builder(datalist = datalist, endpoint = 40)
+simpact.trans.net <- transmission.network.builder(datalist = datalist.phylo, endpoint = 40)
 
 net.sizes <- purrr::map(simpact.trans.net, 1) %>%
   lapply(., length) %>%
   unlist()
 max.net.size <- max(net.sizes)
 max.net.size.index <- which(net.sizes %in% max.net.size) # So we know which network and tree to visualise
+
+revised.network.df <- data.frame(from_id = factor(simpact.trans.net[[max.net.size.index]]$parent),
+                         to_id = factor(simpact.trans.net[[max.net.size.index]]$id))
+revised.network.vertices.df <- data.frame(vertices = as.character(unlist(revised.network.df)))
+revised.network.fortified <- fortify(as.edgedf(revised.network.df), revised.network.vertices.df)
+
 
 ###############################
 # Step 3: Sequence simulation #
@@ -294,49 +300,38 @@ latest.samp <- N$timeToMRCA+N$timeOfMRCA # latest sampling date
 ## Entire transmission network 
 trans.net <- tips.labels(simpact.trans.net = simpact.trans.net,
                                      limitTransmEvents = max.net.size)
-
-trans.net$dtimes <- abs(trans.net$dtimes-40)+1977
 trans.net$itimes <- abs(trans.net$itimes-40)+1977
-trans.net$DonId <- factor(trans.net$DonId)
-trans.net$RecId <- factor(trans.net$RecId)
-
-
-gag <- as.matrix(trans.net)
-# gag <- gag[-1,] # remove universall seed -1
-ga.graph = igraph::graph.edgelist(gag[ , 7:6])
-
-edges <- as.data.frame(igraph::get.edgelist(ga.graph))
-names(edges) <- c("infector", "infectee")
-vertices <- as.data.frame(igraph::vertex_attr(ga.graph))
-network.df <- fortify(geomnet::as.edgedf(edges), vertices)
 
 #########################################################################
 # Step 6: Creating the panels A, B and C of the figure for this example #
 #########################################################################
 
 # A. Transmission network
-# The transmission event from the "ghost infector with ID "-1" to the seed individual with ID "1526" is excluded from the transmission network
-transmissionnetwork.plot <- ggplot(data = network.df[-1, ],
-                                   aes(from_id = from_id,
-                                       to_id = to_id)) +
-  geomnet::geom_net(directed = TRUE,
+# The transmission event from the "ghost infector with ID "-1" to the seed individual with ID "858" is excluded from the transmission network
+
+transmissionnetwork.plot <- ggplot(data = revised.network.fortified[2:nrow(revised.network.fortified), ]) +
+  geomnet::geom_net(data = revised.network.fortified[2:nrow(revised.network.fortified), ],
+                    aes(from_id = from_id,
+                        to_id = to_id),
+                    directed = TRUE,
            size = 1, # 2.5
            layout.alg = "kamadakawai",
            alpha = 1,
-           arrowsize = 0.15, # 0.5
-           arrowgap = 0.01,
+           arrowsize = 0.25, # 0.5
+           arrowgap = 0.004,
            ecolour = "darkgrey",
            colour = "black") +
   theme(axis.ticks=element_blank(),
         axis.title=element_blank(),
-        axis.text=element_blank()) +
+        axis.text=element_blank(),
+        panel.background = element_rect(fill = "grey97")) +
   ylab("")
 print(transmissionnetwork.plot)
 
-ggsave(filename = "network.pdf",
+ggsave(filename = "network_revised.pdf",
        plot = transmissionnetwork.plot,
        path = paste0(getwd(), "/plots"),
-       width = 12, height = 12, units = "cm")
+       width = 10, height = 10, units = "cm")
 
 
 
@@ -361,7 +356,8 @@ phylotree.plot <- ggtree::ggtree(tree,
   theme_grey() +
   theme(axis.line.x = element_line(),
         axis.text.y = element_blank(),
-        axis.ticks.y = element_blank()) +
+        axis.ticks.y = element_blank(),
+        panel.background = element_rect(fill = "grey97")) +
   scale_x_continuous(limits = c(1985, 2020),
                      breaks = seq(from = 1985,
                                   to = 2020,
@@ -373,13 +369,13 @@ print(phylotree.plot)
 ggsave(filename = "tree.pdf",
        plot = phylotree.plot,
        path = paste0(getwd(), "/plots"),
-       width = 12, height = 12, units = "cm")
+       width = 10, height = 10, units = "cm")
 
 
 
 
 # C. Transmission event versus internal nodes
-# The transmission event from the "ghost infector with ID "-1" to the seed individual with ID "1526" is excluded from the transmission network
+# The transmission event from the "ghost infector with ID "-1" to the seed individual with ID "858" is excluded from the transmission network
 annual.infections <- as.numeric(table(floor(trans.net$itimes[-1])))
 year.bins <- as.numeric(names(table(floor(trans.net$itimes[-1]))))
 transmission.events.df <- data.frame(number.trans = annual.infections,
@@ -534,7 +530,7 @@ latest.samp.50.random <- N.50.random$timeToMRCA + N.50.random$timeOfMRCA # lates
 
 
 # C. Transmission event versus internal nodes
-# The transmission event from the "ghost infector with ID "-1" to the seed individual with ID "1526" is excluded from the transmission network
+# The transmission event from the "ghost infector with ID "-1" to the seed individual with ID "858" is excluded from the transmission network
 annual.infections <- as.numeric(table(floor(trans.net$itimes[-1])))
 year.bins <- as.numeric(names(table(floor(trans.net$itimes[-1]))))
 transmission.events.df <- data.frame(number.trans = annual.infections,
@@ -680,7 +676,7 @@ latest.samp.25.random <- N.25.random$timeToMRCA + N.25.random$timeOfMRCA # lates
 
 
 # C. Transmission event versus internal nodes
-# The transmission event from the "ghost infector with ID "-1" to the seed individual with ID "1526" is excluded from the transmission network
+# The transmission event from the "ghost infector with ID "-1" to the seed individual with ID "858" is excluded from the transmission network
 annual.infections <- as.numeric(table(floor(trans.net$itimes[-1])))
 year.bins <- as.numeric(names(table(floor(trans.net$itimes[-1]))))
 transmission.events.df <- data.frame(number.trans = annual.infections,
@@ -827,7 +823,7 @@ latest.samp.125.random <- N.125.random$timeToMRCA + N.125.random$timeOfMRCA # la
 
 
 # C. Transmission event versus internal nodes
-# The transmission event from the "ghost infector with ID "-1" to the seed individual with ID "1526" is excluded from the transmission network
+# The transmission event from the "ghost infector with ID "-1" to the seed individual with ID "858" is excluded from the transmission network
 annual.infections <- as.numeric(table(floor(trans.net$itimes[-1])))
 year.bins <- as.numeric(names(table(floor(trans.net$itimes[-1]))))
 transmission.events.df <- data.frame(number.trans = annual.infections,
@@ -980,7 +976,8 @@ transandnodescombined.plot <- ggplot(data = dplyr::filter(trans.and.nodes.long.e
   ylab("Probability density") +
   theme(axis.line.x = element_line(),
         legend.key = element_blank(),
-        legend.title = element_blank()) +
+        legend.title = element_blank(),
+        panel.background = element_rect(fill = "grey97")) +
   scale_color_manual(values = c("Transmission events" = custom.colours[1],
                                 "100% sequence coverage" = custom.colours[2],
                                 "Random 50% sequence coverage" = custom.colours[3],
@@ -991,4 +988,10 @@ print(transandnodescombined.plot)
 ggsave(filename = "transandnodescombined.pdf",
        plot = transandnodescombined.plot,
        path = paste0(getwd(), "/plots"),
-       width = 20, height = 12, units = "cm")
+       width = 16, height = 10, units = "cm")
+
+save(fitGTRGI.top, fitGTRGI.top.50.random, fitGTRGI.top.25.random, fitGTRGI.top.125.random,
+     file = "/Users/delvaw/Documents/SimpactCyanExamples/fitGTRGI.top.RData")
+
+# To avoid refitting the molecular evolution model with phangorn:
+load(file = "/Users/delvaw/Documents/SimpactCyanExamples/fitGTRGI.top.RData")

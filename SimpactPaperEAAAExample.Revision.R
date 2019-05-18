@@ -283,7 +283,11 @@ cov.FaFc.revised.plot <- ggplot(data = input.output.F.long.revised.cov,
                color = "grey25",
                alpha = 0.5,
                size = 1) +
+  scale_x_continuous(breaks = seq(from = 2000,
+                                  to = 2030,
+                                  by = 5)) +
   theme(panel.background = element_rect(fill = "grey97"),
+        axis.line.x = element_line(),
         legend.key = element_blank(),
         legend.title = element_blank(),
         legend.position = "none")
@@ -293,7 +297,7 @@ plot(cov.FaFc.revised.plot)
 ggsave(filename = "cov_FaFc_3models_revised_plot.pdf",
        plot = cov.FaFc.revised.plot,
        path = "/Users/delvaw/Google Drive/SimpactCyanPaper/Scientific Reports/Revision/plots",
-       width = 16, height = 10, units = "cm")
+       width = 12, height = 10, units = "cm")
 
 
 #### HIV INCIDENCE PLOT
@@ -378,7 +382,11 @@ inc.FaFc.revised.plot <- ggplot(data = input.output.F.long.revised.inc,
                color = "black",
                alpha = 1,
                size = 4) +
+  scale_x_continuous(breaks = seq(from = 1990,
+                                  to = 2030,
+                                  by = 5)) +
   theme(panel.background = element_rect(fill = "grey97"),
+        axis.line.x = element_line(),
         legend.key = element_blank(),
         legend.title = element_blank(),
         legend.position = "none")
@@ -387,7 +395,7 @@ plot(inc.FaFc.revised.plot)
 ggsave(filename = "inc_FaFc_3models_revised_plot.pdf",
        plot = inc.FaFc.revised.plot,
        path = "/Users/delvaw/Google Drive/SimpactCyanPaper/Scientific Reports/Revision/plots",
-       width = 16, height = 10, units = "cm")
+       width = 12, height = 10, units = "cm")
 
 
 # SUMMARISING IMPACT OF EAAA ON HIV INCIDENCE 
@@ -591,7 +599,11 @@ geom_polygon(data = data.frame(x = c(unaids.prev$year+0.5,
              color = "grey25",
              alpha = 0.5,
              size = 1) +
+  scale_x_continuous(breaks = seq(from = 1990,
+                                  to = 2030,
+                                  by = 5)) +
   theme(panel.background = element_rect(fill = "grey97"),
+        axis.line.x = element_line(),
         legend.key = element_blank(),
         legend.title = element_blank(),
         legend.position = "none")
@@ -601,4 +613,4 @@ plot(prev.FaFc.revised.plot)
 ggsave(filename = "prev_FaFc_3models_revised_plot.pdf",
        plot = prev.FaFc.revised.plot,
        path = "/Users/delvaw/Google Drive/SimpactCyanPaper/Scientific Reports/Revision/plots",
-       width = 16, height = 10, units = "cm")
+       width = 12, height = 10, units = "cm")
