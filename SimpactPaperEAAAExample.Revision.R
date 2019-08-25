@@ -328,6 +328,9 @@ input.output.F.long.revised.inc.model.average$scenario.model <- paste0(input.out
 
 
 # FaFc incidence plot
+shims2.df <- data.frame(x = c(2017.5, 2017.5, 2017.5, 2017.5),
+                        y = c(1.35, 1.35, 1.35, 1.35)/100)
+
 inc.FaFc.revised.plot <- ggplot(data = input.output.F.long.revised.inc,
                         aes(year, hivincidence, group = unique.id, colour = scenario.model)) +
   geom_line(linetype = "dashed",
@@ -614,3 +617,31 @@ ggsave(filename = "prev_FaFc_3models_revised_plot.pdf",
        plot = prev.FaFc.revised.plot,
        path = "/Users/delvaw/Google Drive/SimpactCyanPaper/Scientific Reports/Revision/plots",
        width = 12, height = 10, units = "cm")
+
+library(cowplot)
+Figure4 <- plot_grid(cov.FaFc.revised.plot, inc.FaFc.revised.plot, prev.FaFc.revised.plot,
+          labels = c('A', 'B', 'C'),
+          align = "hv",
+          nrow = 1)
+print(Figure4)
+ggsave(filename = "EAAA.pdfs.pdf",
+       plot = Figure4,
+       path = "/Users/delvaw/Google Drive/SimpactCyanPaper/Scientific Reports/Revision/plots",
+       width = 36, height = 10, units = "cm")
+
+save(input.output.F.long.revised.prev,
+     input.output.F.long.revised.prev.model.average,
+     input.output.F.long.revised.prev.average,
+     darkcols,
+     reds,
+     blues,
+     unaids.prev,
+     input.output.F.long.revised.inc,
+     input.output.F.long.revised.inc.model.average,
+     input.output.F.long.revised.inc.average,
+     shims2.df,
+     input.output.F.long.revised.cov,
+     input.output.F.long.revised.cov.model.average,
+     input.output.F.long.revised.cov.average,
+     unaids.art.cov,
+     file = "/Users/delvaw/Documents/SimpactCyanExamples/figure5.ingredients.RData")

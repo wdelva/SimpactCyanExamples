@@ -209,7 +209,7 @@ max.net.size.index <- which(net.sizes %in% max.net.size) # So we know which netw
 revised.network.df <- data.frame(from_id = factor(simpact.trans.net[[max.net.size.index]]$parent),
                          to_id = factor(simpact.trans.net[[max.net.size.index]]$id))
 revised.network.vertices.df <- data.frame(vertices = as.character(unlist(revised.network.df)))
-revised.network.fortified <- fortify(as.edgedf(revised.network.df), revised.network.vertices.df)
+revised.network.fortified <- fortify(geomnet::as.edgedf(revised.network.df), revised.network.vertices.df)
 
 
 ###############################
@@ -246,7 +246,27 @@ sequence.simulation.seqgen.par(dir.seq = dirseqgen,
 
 # Transform the sequence format to be handled by ClusterPicker
 sequ.dna <- ape::read.dna(file = paste0(sub.dir.rename,"/C.Epidemic_seed.seq.bis.sim.nwk.fasta"), format = "interleaved")
+ape::write.FASTA(x = sequ.dna, file = paste0(sub.dir.rename,"/synthetic.fasta"))
 ape::write.dna(sequ.dna, file = paste0(sub.dir.rename,"/C.Epidemic.fas") , format = "fasta")
+
+seq.distance.dist <- dist.dna(sequ.dna, model = "raw") # The lower triangle of the distance matrix stored by columns in a vector
+
+hist(seq.distance.dist)
+
+simseq.df <- phangorn::as.phyDat(sequ.dna)
+dm <- phangorn::dist.ml(simseq.df)
+hist(dm)
+
+treeNJ <- phangorn::NJ(dm)
+# A first naive fit
+fit <- phangorn::pml(treeNJ, data = simseq.df)
+fitGTRGI <- update(fit, k = 4, inv = 0.35)
+# Now estimating the parameters
+fitGTRGI <- optim.pml(fitGTRGI, model="GTR", optInv=TRUE, optGamma=TRUE,
+                      rearrangement = "NNI", control = pml.control(trace = 0))
+
+fitGTRGI.top <- optim.pml(fitGTRGI, model="GTR", optNni=TRUE, optEdge=TRUE,
+                          rearrangement = "NNI", control = pml.control(trace = 0))
 
 
 #####################################################
@@ -269,7 +289,7 @@ time.samp <- dates.Transform.NamedVector(dates = samp.dates,
 time.samp.df <- data.frame(samp.ID = names(time.samp),
                            time.samp = time.samp)
 tree.tips.df <- data.frame(samp.ID = unrooted.tree$tip.label)
-Ord.tree.dates <- left_join(x = tree.tips.df,
+Ord.tree.dates <- dplyr::left_join(x = tree.tips.df,
           y = time.samp.df) %>%
            dplyr::select(time.samp) %>%
            unlist()
@@ -309,8 +329,9 @@ trans.net$itimes <- abs(trans.net$itimes-40)+1977
 # A. Transmission network
 # The transmission event from the "ghost infector with ID "-1" to the seed individual with ID "858" is excluded from the transmission network
 
-transmissionnetwork.plot <- ggplot(data = revised.network.fortified[2:nrow(revised.network.fortified), ]) +
-  geomnet::geom_net(data = revised.network.fortified[2:nrow(revised.network.fortified), ],
+
+transmissionnetwork.plot <- ggplot(data = revised.network.fortified[8002:nrow(revised.network.fortified), ]) +
+  geomnet::geom_net(data = revised.network.fortified[8002:nrow(revised.network.fortified), ],
                     aes(from_id = from_id,
                         to_id = to_id),
                     directed = TRUE,
@@ -339,6 +360,11 @@ ggsave(filename = "network_revised.pdf",
 
 tree <- dater.tree
 class(tree) <- "phylo" # Removing "treedater" as one of the classes that this object belongs to.
+
+
+
+
+
 mrsd <- max(dater.tree$sts)
 
 dates <- format(lubridate::date_decimal(mrsd), "%Y-%m-%d")
@@ -347,9 +373,9 @@ dates <- format(lubridate::date_decimal(mrsd), "%Y-%m-%d")
 # Adding the root edge
 # Seed individual was introduced in 1985.5
 root.edge.length <- min(N$Ti) - 1985.5
-tree <- TreePar::addroot(tree, root.edge.length)
+tree.with.root.edge <- TreePar::addroot(tree, root.edge.length)
 
-phylotree.plot <- ggtree::ggtree(tree,
+phylotree.plot <- ggtree::ggtree(tree.with.root.edge,
                          mrsd = dates[1],
                          size = 0.05) + 
   ggtree::theme_tree2() +
@@ -468,6 +494,376 @@ ggsave(filename = "transandnodesfraction.pdf",
        path = paste0(getwd(), "/plots"),
        width = 12, height = 12, units = "cm")
 
+
+#########################################
+##### Comparing empirical versus synthetic sequences, model fits and trees
+#########################################
+
+# 1. Sequences
+hiv_za.dna <- ape::read.dna(file = paste0(sub.dir.rename,"/hiv_za.fasta"), format = "fasta")
+# The empirical data is stored as hiv_za.fasta and hiv_za.df and hiv_za.dna
+# The synthetic data is stored as C.Epidemic_seed.seq.bis.sim.nwk.fasta and sequ.dna and synthetic.fasta
+
+# 1.01 Load packages
+BiocManager::install()
+BiocManager::install("DECIPHER")
+library(Biostrings)
+
+# 1.1 Create alignment
+library(DECIPHER)
+
+readDNAStringSet(fas)
+
+dna.empirical <- Biostrings::readDNAStringSet(filepath = paste0(sub.dir.rename,"/hiv_za.fasta"),
+                                                            format = "fasta")
+dna.synthetic <- Biostrings::readDNAStringSet(filepath = paste0(sub.dir.rename,"/synthetic.fasta"),
+                                                      format = "fasta")
+aligned.sets <- AlignProfiles(pattern = dna.empirical,
+              subject = dna.synthetic)
+Biostrings::writeXStringSet(aligned.sets,
+                  filepath = paste0(sub.dir.rename,"/aligned.sets.fasta"),
+                  format = "fasta")
+combined.alignment <- seqinr::read.alignment(file = paste0(sub.dir.rename,"/aligned.sets.fasta"),
+                       format = "fasta")
+
+alignment.dist.matrix <- seqinr::dist.alignment(combined.alignment, matrix = "identity")
+
+# 1.2 % similarity
+distance.combined.alignment <- ape::dist.dna(ape::as.DNAbin(combined.alignment), model = "raw")
+hist(distance.combined.alignment)
+
+# distance distribution in empirical sequences
+distance.dna <- ape::dist.dna(hiv_za.dna, model = "raw")
+hist(distance.dna)
+
+# Take a random 386 sequences from sequ.dna
+ind.sequences.sampled <- sample.int(n = 2896, size = 386,  replace = FALSE)
+sequ.dna.sampled <- sequ.dna[ind.sequences.sampled, ]
+distance.synth <- ape::dist.dna(sequ.dna.sampled, model = "raw")
+hist(distance.synth)
+
+
+# 2. Model fits
+modelfit <- load(file = "/Users/delvaw/Documents/SimpactCyanExamples/fitGTRGI.top.RData")
+str(fitGTRGI.top)
+
+# 3. Trees
+# library(adephylo)
+names(fitGTRGI.top)
+
+paristic.dist.synth <- adephylo::distRoot(x = fitGTRGI.top$tree, tips = "all", method = "patristic")
+hist(paristic.dist.synth)
+
+paristic.dist.synth.125 <- adephylo::distRoot(x = fitGTRGI.top.125.random$tree, tips = "all", method = "patristic")
+hist(paristic.dist.synth.125)
+
+## Plot the empirical tree
+empirseq.df <- phangorn::as.phyDat(hiv_za.dna)
+empir.dm <- phangorn::dist.ml(empirseq.df)
+hist(empir.dm)
+
+empir.treeNJ <- ape::multi2di(phangorn::NJ(empir.dm))
+# A first naive fit
+empir.fit <- phangorn::pml(empir.treeNJ, data = empirseq.df)
+empir.fitGTRGI <- update(empir.fit, k = 4, inv = 0.35)
+# Now estimating the parameters
+library(phangorn)
+empir.fitGTRGI <- optim.pml(empir.fitGTRGI, model="GTR", optInv=TRUE, optGamma=TRUE,
+                      rearrangement = "NNI", control = pml.control(trace = 0))
+empir.fitGTRGI$tree <- ape::multi2di(empir.fitGTRGI$tree)
+
+empir.fitGTRGI.top <- optim.pml(empir.fitGTRGI, model="GTR", optNni=TRUE, optEdge=TRUE,
+                          rearrangement = "NNI", control = pml.control(trace = 0))
+empir.fitGTRGI.top$tree <- multi2di(empir.fitGTRGI.top$tree)
+empir.unrooted.tree <- empir.fitGTRGI.top$tree
+
+patristic.dist.empir <- adephylo::distRoot(x = empir.unrooted.tree, tips = "all", method = "patristic")
+hist(patristic.dist.empir)
+
+# Before we calibrate this tree, we need to root it.
+empir.samp.dates <- as.numeric(substr(empir.unrooted.tree$tip.label, 4, 7)) + 0.5
+names(empir.samp.dates) <- empir.unrooted.tree$tip.label
+
+empir.rooted.tree <- ape::rtt(t = empir.unrooted.tree,
+                        tip.dates = empir.samp.dates,
+                        ncpu = 1,
+                        objective = "correlation")
+
+# Calibrate the empirical phylogenetic tree
+empir.dater.tree <- treedater::dater(empir.rooted.tree, empir.samp.dates, s = 2379, searchRoot = 100) # s is the length of sequence
+class(empir.dater.tree) <- "phylo" # Removing "treedater" as one of the classes that this object belongs to.
+
+empir.mrsd <- max(empir.dater.tree$sts) # most recent sampling date
+
+# Node age with picante package
+empir.N <- picante::node.age(empir.dater.tree)
+# empir.N$Ti
+
+# empir.dater.tree.phylo <- empir.dater.tree
+# class(empir.dater.tree.phylo) <- "phylo" # Removing "treedater" as one of the classes that this object belongs to.
+# paristic.dist.dated.empir <- adephylo::distRoot(x = empir.dater.tree.phylo, tips = "all", method = "patristic")
+# hist(paristic.dist.dated.empir)
+
+empir.dates <- format(lubridate::date_decimal(empir.mrsd - min(empir.N$Ti) + root.edge.length), "%Y-%m-%d")
+
+
+
+# Adding the root edge
+# Seed individual was introduced in ?
+empir.root.edge.length <- 0 #root.edge.length # min(empir.N$Ti) - min(empir.N$Ti) # 1985.5
+empir.dater.tree.with.root.edge <- TreePar::addroot(empir.dater.tree, empir.root.edge.length)
+
+empir.phylotree.plot <- ggtree::ggtree(empir.dater.tree.with.root.edge,
+                                 mrsd = empir.dates[1],
+                                 size = 0.05,
+                                 color = darkcols[1]) + 
+  ggtree::theme_tree2() +
+  theme_grey() +
+  theme(axis.text.x = element_blank(),#axis.line.x = element_line(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        panel.background = element_rect(fill = "grey97")) +
+  # scale_x_continuous(limits = c(1985, 2020),
+  #                    breaks = seq(from = 1985,
+  #                                 to = 2020,
+  #                                 by = 5)) +
+  xlab("Empirical tree") +
+  ylab("")
+print(empir.phylotree.plot)
+
+ggsave(filename = "empir.tree.pdf",
+       plot = empir.phylotree.plot,
+       path = paste0(getwd(), "/plots"),
+       width = 10, height = 10, units = "cm")
+
+
+### Now let's plot the synthetic tree, created from a sample of the sequence dataset
+# with sampling dates matching those of empirical dataset.
+
+# alignint sampling times of empirical and synthetic tree:
+time.adjustment <- min(time.samp) - min(empir.samp.dates)
+
+
+# calendar.dates = paste0("samplingtimes_seed_", max.net.size.index, ".csv")
+# samp.dates <- read.csv(paste0(sub.dir.rename, "/", calendar.dates))
+adjusted.time.samp <- dates.Transform.NamedVector(dates = samp.dates,
+                                         count.start = 1977 - time.adjustment,
+                                         endsim = 40) # name the dates
+adjusted.samp.dates <- cbind(samp.dates, adjusted.time.samp)
+
+# Now we need to sample from adjusted.samp.dates with this in mind:
+# table(empir.samp.dates)
+# empir.samp.dates
+# 1989.5 1997.5 1998.5 1999.5 2000.5 2001.5 2002.5 2003.5 2004.5 2005.5 2007.5 2008.5 2009.5 2010.5 2012.5 2013.5 2014.5 
+# 1      3      9     13     23      3      7    132     89     24     27     32      7      1      2     11      2 
+
+empir.samp.dates.table <- table(empir.samp.dates)
+dates.n <- as.vector(empir.samp.dates.table)
+dates.minima <- as.numeric(names(empir.samp.dates.table)) - 0.5
+dates.maxima <- dates.minima + 1
+
+feasible.n <- pmin(dates.n, 130)
+
+matched.sample.list <- list()
+for(index in 1:length(dates.n)){
+   subset.adjusted.samp.dates <- dplyr::filter(adjusted.samp.dates,
+                          adjusted.time.samp >= dates.minima[index],
+                          adjusted.time.samp <= dates.maxima[index])
+   matched.sample.list[[index]] <- dplyr::sample_n(subset.adjusted.samp.dates,
+                                          size = feasible.n[index],
+                                          replace = FALSE)
+  
+}
+matched.sample.df <- do.call(rbind, matched.sample.list)
+
+# Now we create the subset of sequ.dna with the labels as given by matched.sample.df
+sequ.dna.rownames <- rownames(sequ.dna)
+matched.labels <- as.character(matched.sample.df$V1)
+
+sequ.dna.rownames %in% matched.labels
+matched.sample.sequ.dna <- sequ.dna[sequ.dna.rownames %in% matched.labels,]
+
+matched.sample.simseq.df <- phangorn::as.phyDat(matched.sample.sequ.dna)
+matched.sample.dm <- phangorn::dist.ml(matched.sample.simseq.df)
+
+matched.sample.treeNJ <- phangorn::NJ(matched.sample.dm)
+# A first naive fit
+matched.sample.fit <- phangorn::pml(matched.sample.treeNJ, data = matched.sample.simseq.df)
+matched.sample.fitGTRGI <- update(matched.sample.fit, k = 4, inv = 0.35)
+# Now estimating the parameters
+matched.sample.fitGTRGI <- optim.pml(matched.sample.fitGTRGI, model="GTR", optInv=TRUE, optGamma=TRUE,
+                      rearrangement = "NNI", control = pml.control(trace = 0))
+
+matched.sample.fitGTRGI.top <- optim.pml(matched.sample.fitGTRGI, model="GTR", optNni=TRUE, optEdge=TRUE,
+                          rearrangement = "NNI", control = pml.control(trace = 0))
+
+matched.sample.unrooted.tree <- matched.sample.fitGTRGI.top$tree
+
+patristic.dist.matched.sample <- adephylo::distRoot(x = matched.sample.unrooted.tree, tips = "all", method = "patristic")
+
+
+
+# Before we calibrate this tree, we need to root it.
+calendar.dates = paste0("samplingtimes_seed_", max.net.size.index, ".csv")
+samp.dates <- read.csv(paste0(sub.dir.rename, "/", calendar.dates))
+time.samp <- dates.Transform.NamedVector(dates = samp.dates,
+                                         count.start = 1977,
+                                         endsim = 40) # name the dates
+
+
+### Match dates and phylogenetic tree leaves ###
+################################################
+time.samp.df <- data.frame(samp.ID = names(time.samp),
+                           time.samp = time.samp)
+matched.sample.tree.tips.df <- data.frame(samp.ID = matched.sample.unrooted.tree$tip.label)
+matched.sample.Ord.tree.dates <- dplyr::left_join(x = matched.sample.tree.tips.df,
+                                   y = time.samp.df) %>%
+  dplyr::select(time.samp) %>%
+  unlist()
+names(matched.sample.Ord.tree.dates) <- matched.sample.tree.tips.df$samp.ID
+
+matched.sample.rooted.tree <- ape::rtt(t = matched.sample.unrooted.tree,
+                        tip.dates = matched.sample.Ord.tree.dates,
+                        ncpu = 1,
+                        objective = "correlation")
+
+
+# Calibrate the phylogenetic tree
+matched.sample.dater.tree <- treedater::dater(matched.sample.rooted.tree, matched.sample.Ord.tree.dates, s = 3000, searchRoot = 100) # s is the length of sequence
+
+class(matched.sample.dater.tree) <- "phylo" # Removing "treedater" as one of the classes that this object belongs to.
+
+matched.sample.mrsd <- max(matched.sample.dater.tree$sts) # most recent sampling date
+
+
+# Node age with picante package
+matched.sample.N <- picante::node.age(matched.sample.dater.tree)
+min(matched.sample.N$Ti)
+
+matched.sample.dates <- format(lubridate::date_decimal(matched.sample.mrsd - min(matched.sample.N$Ti) + root.edge.length), "%Y-%m-%d")
+
+# Adding the root edge
+# Seed individual was introduced in ?
+matched.sample.root.edge.length <- 0 #root.edge.length # min(empir.N$Ti) - min(empir.N$Ti) # 1985.5
+matched.sample.dater.tree.with.root.edge <- TreePar::addroot(matched.sample.dater.tree, matched.sample.root.edge.length)
+
+matched.sample.phylotree.plot <- ggtree::ggtree(matched.sample.dater.tree.with.root.edge,
+                                       mrsd = matched.sample.dates[1],
+                                       size = 0.05,
+                                       color = darkcols[2]) + 
+  ggtree::theme_tree2() +
+  theme_grey() +
+  theme(axis.text.x = element_blank(), #axis.line.x = element_line(),
+        axis.text.y = element_blank(),
+        axis.ticks = element_blank(),
+        panel.background = element_rect(fill = "grey97")) +
+  # scale_x_continuous(limits = c(1985, 2020),
+  #                    breaks = seq(from = 1985,
+  #                                 to = 2020,
+  #                                 by = 5)) +
+  xlab("Matching sample simulated tree") +
+  ylab("")
+print(matched.sample.phylotree.plot)
+
+ggsave(filename = "matched.sample.tree.pdf",
+       plot = matched.sample.phylotree.plot,
+       path = paste0(getwd(), "/plots"),
+       width = 10, height = 10, units = "cm")
+
+
+### 
+# Comparing paristic distance distributions with a split violin plot
+###
+
+patristic.matched.df <- data.frame(dist = patristic.dist.matched.sample,
+                                  source = "Simulated")
+patristic.empir.df <- data.frame(dist = patristic.dist.empir,
+                                  source = "Empirical")
+patristic.df <- rbind(patristic.empir.df, patristic.matched.df)
+
+
+
+GeomSplitViolin <- ggproto("GeomSplitViolin", GeomViolin, 
+                           draw_group = function(self, data, ..., draw_quantiles = NULL) {
+                             data <- transform(data, xminv = x - violinwidth * (x - xmin), xmaxv = x + violinwidth * (xmax - x))
+                             grp <- data[1, "group"]
+                             newdata <- plyr::arrange(transform(data, x = if (grp %% 2 == 1) xminv else xmaxv), if (grp %% 2 == 1) y else -y)
+                             newdata <- rbind(newdata[1, ], newdata, newdata[nrow(newdata), ], newdata[1, ])
+                             newdata[c(1, nrow(newdata) - 1, nrow(newdata)), "x"] <- round(newdata[1, "x"])
+                             
+                             if (length(draw_quantiles) > 0 & !scales::zero_range(range(data$y))) {
+                               stopifnot(all(draw_quantiles >= 0), all(draw_quantiles <=
+                                                                         1))
+                               quantiles <- ggplot2:::create_quantile_segment_frame(data, draw_quantiles)
+                               aesthetics <- data[rep(1, nrow(quantiles)), setdiff(names(data), c("x", "y")), drop = FALSE]
+                               aesthetics$alpha <- rep(1, nrow(quantiles))
+                               both <- cbind(quantiles, aesthetics)
+                               quantile_grob <- GeomPath$draw_panel(both, ...)
+                               ggplot2:::ggname("geom_split_violin", grid::grobTree(GeomPolygon$draw_panel(newdata, ...), quantile_grob))
+                             }
+                             else {
+                               ggplot2:::ggname("geom_split_violin", GeomPolygon$draw_panel(newdata, ...))
+                             }
+                           })
+
+geom_split_violin <- function(mapping = NULL, data = NULL, stat = "ydensity", position = "identity", ..., 
+                              draw_quantiles = NULL, trim = TRUE, scale = "area", na.rm = FALSE, 
+                              show.legend = NA, inherit.aes = TRUE) {
+  layer(data = data, mapping = mapping, stat = stat, geom = GeomSplitViolin, 
+        position = position, show.legend = show.legend, inherit.aes = inherit.aes, 
+        params = list(trim = trim, scale = scale, draw_quantiles = draw_quantiles, na.rm = na.rm, ...))
+}
+
+# to load custom colours
+figure5.objects <- load(file = "/Users/delvaw/Documents/SimpactCyanExamples/figure5.ingredients.RData")
+
+patristic.violin <- ggplot(patristic.df,
+                          aes(x = 0, y = dist, fill = source)) +
+  geom_split_violin() +
+  theme_grey() +
+  theme(axis.text.x = element_blank(), #axis.line.x = element_line(),
+        #axis.text.y = element_blank(),
+        axis.ticks.x = element_blank(),
+        legend.title = element_blank(),
+        panel.background = element_rect(fill = "grey97")) +
+  scale_y_continuous(limits = c(0, 0.27),
+                     breaks = seq(from = 0,
+                                  to = 0.25,
+                                  by = 0.05)) +
+  xlab("Density") +
+  ylab("Patristic Distance") +
+  scale_fill_manual(values = c("Empirical" = reds[1],
+                                "Simulated" = blues[1])) 
+print(patristic.violin)
+ggsave(filename = "patristic.violin.pdf",
+       plot = patristic.violin,
+       path = paste0(getwd(), "/plots"),
+       width = 10, height = 10, units = "cm")
+
+## Colless imbalance index
+
+Colless.empir.rooted.tree <- phyloTop::colless.phylo(empir.rooted.tree, normalise = TRUE)
+Colless.matched.sample.rooted.tree <- phyloTop::colless.phylo(matched.sample.rooted.tree, normalise = TRUE)
+
+Sackin.empir.rooted.tree <- phyloTop::sackin.phylo(empir.rooted.tree, normalise = TRUE)
+Sackin.matched.sample.rooted.tree <- phyloTop::sackin.phylo(matched.sample.rooted.tree, normalise = TRUE)
+
+round(c(Colless.empir.rooted.tree,
+        Colless.matched.sample.rooted.tree,
+        Sackin.empir.rooted.tree,
+        Sackin.matched.sample.rooted.tree), 3)
+
+t(round(phyloTop(list(empir.rooted.tree, matched.sample.rooted.tree), funcs = "all", normalise = TRUE), 3))
+
+FigureS1 <- ggpubr::ggarrange(empir.phylotree.plot,
+                              matched.sample.phylotree.plot,
+                             patristic.violin, 
+                             labels = c("a", "b", "c"),
+                             nrow = 1, ncol = 3)
+ggplot2::ggsave(filename = "FigureS1.pdf",
+                plot = FigureS1,
+                path = "/Users/delvaw/Google Drive/SimpactCyanPaper/Scientific Reports/Revision2/plots",
+                width = 36, height = 10, units = "cm")
 
 
 
@@ -993,5 +1389,63 @@ ggsave(filename = "transandnodescombined.pdf",
 save(fitGTRGI.top, fitGTRGI.top.50.random, fitGTRGI.top.25.random, fitGTRGI.top.125.random,
      file = "/Users/delvaw/Documents/SimpactCyanExamples/fitGTRGI.top.RData")
 
+save(revised.network.fortified, tree, dates, trans.and.nodes.long.enriched.combined, custom.colours,
+     file = "/Users/delvaw/Documents/SimpactCyanExamples/figure4.ingredients.RData")
+
+
+
 # To avoid refitting the molecular evolution model with phangorn:
 load(file = "/Users/delvaw/Documents/SimpactCyanExamples/fitGTRGI.top.RData")
+
+
+# Just the legend of the transandnodescombined plot
+transandnodescombined.legend <- cowplot::get_legend(transandnodescombined.plot)
+
+# The transandnodescombined plot without the legend
+transandnodescombined.nolegend.plot <- ggplot(data = dplyr::filter(trans.and.nodes.long.enriched.combined,
+                                                          calendaryear >= 1985,
+                                                          calendaryear <= 2017),
+                                     aes(x = calendaryear,
+                                         y = percentage.events,
+                                         colour = Scenario)) +
+  geom_point() +
+  geom_line(size = 1,
+            alpha = 0.75) +
+  scale_x_continuous(limits = c(1985, 2017),
+                     breaks = seq(from = 1985,
+                                  to = 2017,
+                                  by = 5)) +
+  xlab("Time") +
+  ylab("Probability density") +
+  theme(axis.line.x = element_line(),
+        legend.key = element_blank(),
+        legend.title = element_blank(),
+        panel.background = element_rect(fill = "grey97"),
+        legend.position = "none") +
+  scale_color_manual(values = c("Transmission events" = custom.colours[1],
+                                "100% sequence coverage" = custom.colours[2],
+                                "Random 50% sequence coverage" = custom.colours[3],
+                                "Random 25% sequence coverage" = custom.colours[4],
+                                "Random 12.5% sequence coverage" = custom.colours[5])) 
+print(transandnodescombined.nolegend.plot)
+
+
+library(cowplot)
+Figure5 <- plot_grid(#transmissionnetwork.plot,
+                     phylotree.plot,
+                     phylotree.plot,
+                     transandnodescombined.nolegend.plot,
+                     transandnodescombined.legend,
+                     labels = c('A', 'B', 'C', ''),
+                     align = "v",
+                     axis = "l",
+                     #rel_widths = c(10, 10, 16),
+                     #scale = c(1, 1, 0.6),
+                     nrow = 1)
+print(Figure5)
+ggsave(filename = "phylo.pdf",
+       plot = Figure5,
+       path = "/Users/delvaw/Google Drive/SimpactCyanPaper/Scientific Reports/Revision/plots",
+       width = 36, height = 10, units = "cm")
+
+
